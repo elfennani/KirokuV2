@@ -1,0 +1,11 @@
+query GetEpisodeById($showId: String!, $episodeString: String!, $audio:VaildTranslationTypeEnumType!){
+    episode(
+        showId: $showId
+        translationType: $audio
+        episodeString: $episodeString
+    ) {
+        episodeString
+        translationType
+        sourceUrls
+    }
+}

@@ -1,0 +1,8 @@
+query GetEpisodeList($showId: String!){
+    episodeInfos(showId: $showId, episodeNumStart: 1, episodeNumEnd: 99999) {
+        _id
+        thumbnails
+        episodeIdNum
+        vidInforssub
+    }
+}

@@ -1,0 +1,36 @@
+query GetCurrentlyWatching($userId:Int!) {
+    MediaListCollection(userId: $userId, type: ANIME, status: CURRENT) {
+        lists {
+            name
+            status
+            entries {
+                id
+                mediaId
+                progress
+                startedAt {
+                    ...DateFragment
+                }
+                completedAt {
+                    ...DateFragment
+                }
+                media {
+                    id
+                    bannerImage
+                    coverImage{
+                        extraLarge
+                        large
+                        medium
+                        color
+                    }
+                    title {
+                        native
+                        romaji
+                        english
+                        userPreferred
+                    }
+                    episodes
+                }
+            }
+        }
+    }
+}

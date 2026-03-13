@@ -1,0 +1,14 @@
+query GetCollectionMedia($userId:Int!, $status: MediaListStatus!) {
+    MediaListCollection(userId: $userId, type: ANIME, status: $status) {
+        lists {
+            name
+            status
+            entries {
+                ...EntryFragment
+                media {
+                    ...MediaFragment
+                }
+            }
+        }
+    }
+}

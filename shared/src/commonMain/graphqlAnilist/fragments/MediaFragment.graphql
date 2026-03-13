@@ -1,0 +1,14 @@
+fragment MediaFragment on Media{
+    id
+    bannerImage
+    coverImage{
+        extraLarge
+        large
+        medium
+        color
+    }
+    title {
+        ...TitleFragment
+    }
+    episodes
+}

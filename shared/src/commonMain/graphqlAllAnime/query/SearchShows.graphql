@@ -1,0 +1,11 @@
+query SearchShows($name: String!, $sortBy: SortBy!, $page: Int!) {
+    shows(search: { query: $name, sortBy: $sortBy }, page: $page) {
+        edges {
+            _id
+            aniListId
+            name
+            thumbnail
+            availableEpisodes
+        }
+    }
+}

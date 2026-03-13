@@ -1,0 +1,13 @@
+fragment EntryFragment on MediaList {
+    id
+    mediaId
+    progress
+    status
+    updatedAt
+    startedAt {
+        ...DateFragment
+    }
+    completedAt {
+        ...DateFragment
+    }
+}

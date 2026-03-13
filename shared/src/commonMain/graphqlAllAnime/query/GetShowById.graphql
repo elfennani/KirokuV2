@@ -1,0 +1,8 @@
+query GetShowById($showId: String!){
+    show(_id: $showId) {
+        _id
+        name
+        availableEpisodes
+        availableEpisodesDetail
+    }
+}
