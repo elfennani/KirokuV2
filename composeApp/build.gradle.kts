@@ -1,3 +1,4 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -19,6 +20,20 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.kotlinx.coroutines.android)
+            implementation(project.dependencies.platform("io.insert-koin:koin-bom:4.2.0-RC1"))
+            implementation("io.insert-koin:koin-core")
+            implementation("io.insert-koin:koin-compose")
+            implementation("io.insert-koin:koin-compose-viewmodel")
+
+            // Compose Navigation 3
+            implementation(libs.androidx.navigation3.ui)
+            implementation(libs.androidx.navigation3.runtime)
+            implementation(libs.androidx.material3.adaptive.navigation3)
+            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+
+            implementation("io.coil-kt.coil3:coil-compose:3.4.0")
+            implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -67,4 +82,3 @@ android {
 dependencies {
     debugImplementation(libs.compose.uiTooling)
 }
-

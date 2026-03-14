@@ -1,13 +1,20 @@
-query GetCollectionMedia($userId:Int!, $status: MediaListStatus!) {
-    MediaListCollection(userId: $userId, type: ANIME, status: $status) {
-        lists {
-            name
-            status
-            entries {
-                ...EntryFragment
-                media {
-                    ...MediaFragment
-                }
+query GetCollectionMedia($userId:Int!, $status: [MediaListStatus]!) {
+    anime:MediaListCollection(userId: $userId, type: ANIME, status_in: $status) {
+        ...CollectionFragment
+    }
+    manga:MediaListCollection(userId: $userId, type: MANGA, status_in: $status) {
+        ...CollectionFragment
+    }
+}
+
+fragment CollectionFragment on MediaListCollection {
+    lists {
+        name
+        status
+        entries {
+            ...EntryFragment
+            media {
+                ...MediaFragment
             }
         }
     }

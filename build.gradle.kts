@@ -6,4 +6,12 @@ plugins {
     alias(libs.plugins.composeMultiplatform) apply false
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
+    id(libs.plugins.build.konfig.get().toString()) version "0.17.1" apply false
 }
+
+buildscript {
+    dependencies {
+        classpath(libs.build.konfig)
+    }
+}
+

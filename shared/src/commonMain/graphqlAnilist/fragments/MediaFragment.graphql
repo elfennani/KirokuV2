@@ -11,4 +11,12 @@ fragment MediaFragment on Media{
         ...TitleFragment
     }
     episodes
+    description
+    episodes
+    chapters
+    type
+    mediaListEntry {
+        progress
+        status
+    }
 }
