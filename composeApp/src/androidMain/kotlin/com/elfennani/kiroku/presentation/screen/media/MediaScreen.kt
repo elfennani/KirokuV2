@@ -65,12 +65,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
@@ -471,6 +473,10 @@ private fun EpisodeItem(
                 enter = fadeIn() + slideInVertically(),
                 exit = fadeOut() + slideOutVertically()
             ) {
+                val hapticFeedback = LocalHapticFeedback.current
+                LaunchedEffect(Unit) {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                }
                 Icon(
                     painterResource(R.drawable.outline_download_24),
                     "Download",
@@ -512,7 +518,7 @@ private fun EpisodeItem(
                                 offsetX.snapTo(
                                     (offsetX.value + dragAmount).coerceIn(
                                         minimumValue = 0f,
-                                        maximumValue = width.toFloat()
+                                        maximumValue = width.toFloat() / 2
                                     )
                                 )
                             }
