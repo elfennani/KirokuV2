@@ -1,6 +1,13 @@
 package com.elfennani.kiroku.presentation.screen
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -23,6 +30,8 @@ import com.elfennani.kiroku.presentation.screen.home.HomeRoute
 import com.elfennani.kiroku.presentation.screen.home.HomeScreen
 import com.elfennani.kiroku.presentation.screen.login.LoginRoute
 import com.elfennani.kiroku.presentation.screen.login.LoginScreen
+import com.elfennani.kiroku.presentation.screen.media.MediaRoute
+import com.elfennani.kiroku.presentation.screen.media.MediaScreen
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -67,6 +76,30 @@ fun Navigation(isAuthed: Boolean) {
             ),
             backStack = backStack,
             onBack = { viewModel.back() },
+            predictivePopTransitionSpec = {
+                ContentTransform(
+                    targetContentEnter = fadeIn() + scaleIn(initialScale = 0.9f),
+                    initialContentExit = fadeOut() + slideOutHorizontally(
+                        targetOffsetX = { it/2 },
+                    ) + scaleOut(targetScale = 0.9f)
+                )
+            },
+            popTransitionSpec = {
+                ContentTransform(
+                    targetContentEnter = fadeIn() + scaleIn(initialScale = 0.9f),
+                    initialContentExit = fadeOut() + slideOutHorizontally(
+                        targetOffsetX = { it/2 },
+                    ) + scaleOut(targetScale = 0.9f)
+                )
+            },
+            transitionSpec = {
+                ContentTransform(
+                    targetContentEnter = fadeIn() + slideIntoContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    ) + scaleIn(initialScale = 0.9f),
+                    initialContentExit = fadeOut() + scaleOut(targetScale = 0.9f)
+                )
+            },
             entryProvider = entryProvider {
                 entry<LoginRoute>() {
                     LoginScreen()
@@ -78,7 +111,16 @@ fun Navigation(isAuthed: Boolean) {
                     )
                 }
                 entry<HomeRoute> {
-                    HomeScreen(backStack)
+                    HomeScreen(
+                        onNavigate = viewModel::navigateTo
+                    )
+                }
+                entry<MediaRoute> {
+                    MediaScreen(
+                        route = it,
+                        onNavigate = viewModel::navigateTo,
+                        onNavigateBack = viewModel::back
+                    )
                 }
             }
         )

@@ -17,6 +17,7 @@ import com.elfennani.kiroku.domain.model.resourceOf
 import com.elfennani.kiroku.domain.repository.MediaRepository
 import com.elfennani.kiroku.domain.usecase.GetSession
 import com.elfennani.shared.anilist.GetCollectionMediaQuery
+import com.elfennani.shared.anilist.GetMediaByIdQuery
 import com.elfennani.shared.anilist.type.MediaListStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -38,12 +39,23 @@ class MediaRepositoryImpl(
         TODO("Not yet implemented")
     }
 
-    override suspend fun fetchMedia(mediaId: Int): Media {
-        TODO("Not yet implemented")
+    override suspend fun fetchMedia(mediaId: Int): Resource<Media> {
+        return resourceOf {
+            val response = aniListClient.query(
+                GetMediaByIdQuery(mediaId)
+            ).execute().dataOrThrow()
+
+            val media =
+                response.Media?.mediaFragment?.asEntity() ?: throw Exception("Media not found")
+
+            mediaDao.insertMedia(media)
+
+            media.asDomain()
+        }
     }
 
-    override fun getMediaFlow(mediaId: Int): Flow<Media> {
-        TODO("Not yet implemented")
+    override fun getMediaFlow(mediaId: Int): Flow<Media?> {
+        return mediaDao.getMediaFlow(mediaId).map { it?.asDomain() }
     }
 
     override suspend fun fetchOngoingMedia(): Resource<List<Media>> {

@@ -14,8 +14,8 @@ interface MediaRepository {
 
     fun getAnimeSources(type: MediaType): List<String>
 
-    suspend fun fetchMedia(mediaId: Int): Media
-    fun getMediaFlow(mediaId: Int): Flow<Media>
+    suspend fun fetchMedia(mediaId: Int): Resource<Media>
+    fun getMediaFlow(mediaId: Int): Flow<Media?>
 
     suspend fun fetchOngoingMedia(): Resource<List<Media>>
     fun getOngoingMediaFlow(): Flow<List<Media>>

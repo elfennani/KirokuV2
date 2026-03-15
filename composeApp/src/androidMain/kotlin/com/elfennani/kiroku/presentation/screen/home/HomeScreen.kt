@@ -48,6 +48,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -59,21 +60,29 @@ import com.elfennani.kiroku.domain.model.Media
 import com.elfennani.kiroku.domain.model.MediaType
 import com.elfennani.kiroku.domain.model.Result
 import com.elfennani.kiroku.domain.model.label
+import com.elfennani.kiroku.presentation.component.MediaProgressBar
+import com.elfennani.kiroku.presentation.screen.media.MediaRoute
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun HomeScreen(backstack: List<NavKey>) {
+fun HomeScreen(
+    onNavigate: (NavKey) -> Unit,
+) {
     val viewModel = koinViewModel<HomeViewModel>()
     val state by viewModel.state.collectAsState()
 
     HomeScreen(
         state = state,
+        onNavigateToMedia = {
+            onNavigate(MediaRoute(it))
+        }
     )
 }
 
 @Composable
 private fun HomeScreen(
     state: HomeUiState = HomeUiState(),
+    onNavigateToMedia: (id: Int) -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -112,7 +121,7 @@ private fun HomeScreen(
                 )
             }
             items(state.media.filter { it.type == MediaType.ANIME }) { media ->
-                MediaItemView(media)
+                MediaItemView(media, onClick = { onNavigateToMedia(media.id) })
             }
 
             item {
@@ -130,19 +139,19 @@ private fun HomeScreen(
                 )
             }
             items(state.media.filter { it.type == MediaType.MANGA }) { media ->
-                MediaItemView(media)
+                MediaItemView(media, onClick = { onNavigateToMedia(media.id) })
             }
         }
     }
 }
 
 @Composable
-private fun MediaItemView(media: Media) {
+private fun MediaItemView(media: Media, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
-            .clickable {}
+            .clickable { onClick() }
             .padding(vertical = 12.dp, horizontal = 24.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -174,90 +183,19 @@ private fun MediaItemView(media: Media) {
                 Text(
                     media.title,
                     style = MaterialTheme.typography.titleLarge,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    Text(
-                        text = "Progress",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outlineVariant
-                    )
-
-                    Text(
-                        text = buildAnnotatedString {
-                            withStyle(
-                                style = MaterialTheme.typography.labelLarge
-                                    .toSpanStyle()
-                                    .copy(color = MaterialTheme.colorScheme.onBackground)
-                            ) {
-                                append(media.progress?.toString() ?: "N/A")
-                            }
-                            withStyle(
-                                style = MaterialTheme.typography.labelSmall
-                                    .toSpanStyle()
-                                    .copy(color = MaterialTheme.colorScheme.outlineVariant)
-                            ) {
-                                if (media.total != null)
-                                    append("/${media.total}")
-                                else if (media.type == MediaType.MANGA)
-                                    append(" Chaps.")
-                                else
-                                    append(" Eps.")
-                            }
-                        },
-                        style = MaterialTheme.typography.labelSmall,
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .background(MaterialTheme.colorScheme.secondary),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(
-                                if (media.progress != null && media.total != null)
-                                    media.progress!!.toFloat() / media.total!!
-                                else
-                                    1f
-                            )
-                            .blur(2.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(2.dp)
-                                .background(MaterialTheme.colorScheme.primary)
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(
-                                if (media.progress != null && media.total != null)
-                                    media.progress!!.toFloat() / media.total!!
-                                else
-                                    1f
-                            )
-                            .height(2.dp)
-                            .background(MaterialTheme.colorScheme.primary)
-                    )
-                }
-            }
+            MediaProgressBar(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                media = media
+            )
         }
     }
 }
+
 
 operator fun PaddingValues.plus(other: PaddingValues): PaddingValues {
     return PaddingValues(

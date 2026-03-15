@@ -64,7 +64,7 @@ class AllAnimeDataSource(
 
             return Result.Success(shows)
         } catch (e: Exception) {
-            return Result.Error(e)
+            return Result.Error(e.message ?: "Unexpected Error Occurred")
         }
     }
 
@@ -130,7 +130,7 @@ class AllAnimeDataSource(
 
                 Result.Success(emptyList() ?: throw Error("Failed to load episodes."))
             } catch (e: Exception) {
-                Result.Error(e)
+                Result.Error(e.message ?: "Unknown")
             }
         }
     }
@@ -238,7 +238,7 @@ class AllAnimeDataSource(
 
             Result.Success(urls)
         } catch (e: Exception) {
-            Result.Error(e)
+            Result.Error(e.message ?: "Unknown")
         }
     }
 

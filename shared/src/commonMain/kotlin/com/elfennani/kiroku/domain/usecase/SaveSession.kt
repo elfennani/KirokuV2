@@ -13,7 +13,7 @@ class SaveSession(
             sessionRepository.saveSession(session)
             return Result.Success(Unit)
         } catch (e: Exception) {
-            return Result.Error(e)
+            return Result.Error(e.message ?: "Failed to save session")
         }
     }
 }

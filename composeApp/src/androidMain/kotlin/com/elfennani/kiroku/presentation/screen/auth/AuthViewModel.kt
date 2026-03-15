@@ -24,11 +24,10 @@ class AuthViewModel(
                     _state.value = AuthUiState.Success
                 else if (result is Result.Error) {
                     _state.value =
-                        AuthUiState.Error("Failed to save session: ${result.throwable.message}")
+                        AuthUiState.Error("Failed to save session: ${result.message}")
                     GlobalErrorHandler.emitError(
                         Exception(
-                            "Failed to save session: ${result.throwable.message}",
-                            result.throwable
+                            "Failed to save session: ${result.message}",
                         )
                     )
                 }
