@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,9 +33,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -42,6 +46,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import coil3.compose.AsyncImage
 import com.elfennani.kiroku.R
+import com.elfennani.kiroku.domain.model.Media
+import com.elfennani.kiroku.domain.model.MediaStatus
 import com.elfennani.kiroku.domain.model.MediaType
 import com.elfennani.kiroku.domain.model.label
 import com.elfennani.kiroku.presentation.component.MediaProgressBar
@@ -113,7 +119,8 @@ private fun MediaScreen(
                         contentDescription = state.media.title,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .aspectRatio(3f / 2),
+                            .aspectRatio(3f / 2)
+                            .background(MaterialTheme.colorScheme.surface),
                         contentScale = ContentScale.Crop
                     )
 
@@ -159,7 +166,8 @@ private fun MediaScreen(
                                 contentDescription = state.media.title,
                                 modifier = Modifier
                                     .width(128.dp)
-                                    .aspectRatio(0.66f),
+                                    .aspectRatio(0.66f)
+                                    .background(MaterialTheme.colorScheme.surface),
                                 contentScale = ContentScale.Crop
                             )
 
@@ -213,6 +221,38 @@ private fun MediaScreen(
                                     Text("+1")
                                 }
                             }
+
+
+                            if (state.media.description != null) {
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    horizontalAlignment = Alignment.End
+                                ) {
+                                    Text(
+                                        "DESCRIPTION",
+                                        modifier = Modifier.fillMaxWidth(),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.outlineVariant,
+                                    )
+                                    Text(
+                                        AnnotatedString.fromHtml(state.media.description!!),
+                                        maxLines = 3,
+                                        overflow = TextOverflow.Ellipsis,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                    TextButton(
+                                        modifier = Modifier.offset(x = 12.dp),
+                                        onClick = {},
+                                        colors = ButtonDefaults.textButtonColors(
+                                            contentColor = MaterialTheme.colorScheme.onBackground
+                                        )
+                                    ) {
+                                        Text("More About")
+                                        Spacer(Modifier.width(8.dp))
+                                        Icon(painterResource(R.drawable.outline_keyboard_arrow_right_24), null)
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -224,10 +264,37 @@ private fun MediaScreen(
 @Preview
 @Composable
 private fun MediaScreenPrev() {
+    val fateStrangeFake = Media(
+        id = 166617,
+        title = "Fate/strange Fake",
+        description = """
+        In a Holy Grail War, Mages (Masters) and their Heroic Spirits (Servants) fight for the control of the Holy Grail—an omnipotent wish-granting device said to fulfill any desire. Years have passed since the end of the Fifth Holy Grail War in Japan. Now, signs portend the emergence of a new Holy Grail in the western American city of Snowfield. Sure enough, Masters and Servants begin to gather... <br><br>
+
+        A missing Servant class...<br>
+        Impossible Servant summonings...<br>
+        A nation shrouded in secrecy...<br>
+        And a city created as a battleground.<br>
+        <br>
+        In the face of such irregularities, the Holy Grail War is twisted and driven into the depth of madness. Let the curtain rise on a masquerade of humans and heroes, made to dance upon the stage of a false Holy Grail. <i>This is a Holy Grail War covered in lies.</i>
+        <br><br>
+        (Source: Official Site, Aniplex USA, edited)
+        <br><br>
+        <i>Notes:</i><br>
+        •  <i>Special premiere of Episode 1 in its English Dub occurred in Los Angeles at the Fate 20th Anniversary Showcase event and as well through Crunchyroll’s YouTube Channel on November 23, 2024 before the Japanese television premiere.</i><br>
+        •  <i>The Japanese advanced premiere occurred during the "Fate New Year's Eve TV Special 2024" on December 31, 2024.</i>
+    """.trimIndent(),
+        progress = 10,
+        total = 13,
+        type = MediaType.ANIME,
+        status = MediaStatus.IN_PROGRESS,
+        cover = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx166617-34fpC9y47tTx.png",
+        banner = "https://s4.anilist.co/file/anilistcdn/media/anime/banner/166617-P4w3p0H4lE1O.jpg"
+    )
     AppTheme() {
         MediaScreen(
             state = MediaUiState(
-                error = "Failed to load media"
+                isLoading = false,
+                media = fateStrangeFake
             )
         )
     }

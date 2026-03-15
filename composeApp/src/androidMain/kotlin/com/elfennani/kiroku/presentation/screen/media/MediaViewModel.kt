@@ -24,6 +24,8 @@ class MediaViewModel(
             }
         }
 
+
+
         viewModelScope.launch {
             mediaRepository.fetchMedia(route.mediaId).let { res ->
                 when (res) {

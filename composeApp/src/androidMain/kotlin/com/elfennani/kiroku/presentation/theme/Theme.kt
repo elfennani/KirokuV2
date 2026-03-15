@@ -18,6 +18,8 @@ private val lightScheme = lightColorScheme(
     outline = shade3,
     outlineVariant = shade2,
 
+    surface = shade3,
+
     secondary = primaryLight2,
     onSecondary = primaryDark2
 )
