@@ -3,7 +3,7 @@ package com.elfennani.kiroku.data.local.entity
 import androidx.room.Entity
 import com.elfennani.kiroku.domain.model.Episode
 
-@Entity(tableName = "episode", primaryKeys = ["id", "source"])
+@Entity(tableName = "episode", primaryKeys = ["id", "source", "mediaId"])
 data class EpisodeEntity(
     val id: String,
     val source: String,

@@ -35,10 +35,11 @@ import kotlinx.coroutines.IO
         EpisodeEntity::class,
         ChapterEntity::class
     ],
-    version = 3,
+    version = 4,
     autoMigrations = [
         AutoMigration(1, 2),
         AutoMigration(2, 3),
+        AutoMigration(3, 4),
     ]
 )
 @TypeConverters(Converters::class)

@@ -98,7 +98,7 @@ fun MatchScreen(
                         .padding(WindowInsets.statusBars.asPaddingValues())
                         .padding(8.dp)
                         .shadow(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(0.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
@@ -112,7 +112,12 @@ fun MatchScreen(
                             textStyle = MaterialTheme.typography.bodyMedium.copy(
                                 MaterialTheme.colorScheme.onBackground
                             ),
-                            cursorBrush = Brush.verticalGradient(listOf(MaterialTheme.colorScheme.primary)),
+                            cursorBrush = Brush.verticalGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.primary
+                                )
+                            ),
                             decorationBox = {
                                 Box(
                                     modifier = Modifier
@@ -139,7 +144,8 @@ fun MatchScreen(
                     HorizontalDivider(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .align(Alignment.BottomStart)
+                            .align(Alignment.BottomStart),
+                        color = MaterialTheme.colorScheme.outline
                     )
             }
         }

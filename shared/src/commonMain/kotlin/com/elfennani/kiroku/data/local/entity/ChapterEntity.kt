@@ -4,7 +4,7 @@ import androidx.room.Entity
 import com.elfennani.kiroku.domain.model.Chapter
 import kotlin.time.Instant
 
-@Entity(tableName = "chapters", primaryKeys = ["id", "source"])
+@Entity(tableName = "chapters", primaryKeys = ["id", "source", "mediaId"])
 data class ChapterEntity(
     val id: String,
     val source: String,
