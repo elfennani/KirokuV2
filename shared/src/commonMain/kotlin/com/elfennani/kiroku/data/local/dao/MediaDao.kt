@@ -5,7 +5,9 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Upsert
 import com.elfennani.kiroku.data.local.entity.LocalMediaEntity
+import com.elfennani.kiroku.data.local.entity.MatchEntity
 import com.elfennani.kiroku.data.local.entity.OngoingMediaEntity
 import com.elfennani.kiroku.data.local.relation.OngoingWithMedia
 import kotlinx.coroutines.flow.Flow
@@ -38,6 +40,15 @@ interface MediaDao {
 
     @Insert
     suspend fun insertOngoingMedia(ongoingMedia: List<OngoingMediaEntity>)
+
+    @Upsert
+    suspend fun insertMediaMatch(match: MatchEntity)
+
+    @Query("SELECT sourceId FROM `match` WHERE mediaId = :mediaId AND sourceName = :sourceName")
+    suspend fun getMediaSourceId(mediaId: Int, sourceName: String): String?
+
+    @Query("SELECT sourceId FROM `match` WHERE mediaId = :mediaId AND sourceName = :sourceName")
+    fun getMediaSourceIdFlow(mediaId: Int, sourceName: String): Flow<String?>
 
     @Transaction
     suspend fun insertOngoingMediaTransaction(mediaList: List<LocalMediaEntity>){

@@ -5,18 +5,23 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -46,12 +51,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import coil3.compose.AsyncImage
 import com.elfennani.kiroku.R
+import com.elfennani.kiroku.domain.model.MatchStatus
 import com.elfennani.kiroku.domain.model.Media
+import com.elfennani.kiroku.domain.model.MediaItemList
 import com.elfennani.kiroku.domain.model.MediaStatus
 import com.elfennani.kiroku.domain.model.MediaType
 import com.elfennani.kiroku.domain.model.label
 import com.elfennani.kiroku.presentation.component.MediaProgressBar
 import com.elfennani.kiroku.presentation.theme.AppTheme
+import com.elfennani.kiroku.utils.clean
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -138,7 +146,11 @@ private fun MediaScreen(
                 }
 
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        bottom = 96.dp + WindowInsets.navigationBars.asPaddingValues()
+                            .calculateBottomPadding()
+                    )
                 ) {
                     item {
                         Column(
@@ -249,7 +261,126 @@ private fun MediaScreen(
                                     ) {
                                         Text("More About")
                                         Spacer(Modifier.width(8.dp))
-                                        Icon(painterResource(R.drawable.outline_keyboard_arrow_right_24), null)
+                                        Icon(
+                                            painterResource(R.drawable.outline_keyboard_arrow_right_24),
+                                            null
+                                        )
+                                    }
+                                }
+                            }
+
+                            Text(
+                                when (state.media.type) {
+                                    MediaType.ANIME -> "EPISODES"
+                                    MediaType.MANGA -> "CHAPTERS"
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.outlineVariant,
+                            )
+                        }
+                    }
+
+                    when (state.items) {
+                        MatchStatus.Loading -> item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(128.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+
+                        MatchStatus.Unmatched -> item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 64.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(painterResource(R.drawable.outline_error_24), "Error")
+                                Spacer(Modifier.height(16.dp))
+                                Text(
+                                    "This media is not matched, please match it now",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                TextButton(onClick = {}) {
+                                    Text("Match Now")
+                                }
+                            }
+                        }
+
+                        is MatchStatus.Error -> item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 64.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(painterResource(R.drawable.outline_error_24), "Error")
+                                Spacer(Modifier.height(16.dp))
+                                Text(
+                                    "Failed to fetch episodes",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    textAlign = TextAlign.Center
+                                )
+                                Text(
+                                    state.items.message,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    textAlign = TextAlign.Center,
+                                    color = MaterialTheme.colorScheme.outline
+                                )
+
+                                TextButton(onClick = {}) {
+                                    Text("Match Now")
+                                }
+                            }
+                        }
+
+                        is MatchStatus.Matched -> {
+                            when (state.items.items) {
+                                is MediaItemList.ChapterList -> item { Text("TODO") }
+                                is MediaItemList.EpisodeList -> items((state.items.items as MediaItemList.EpisodeList).episodes) { episode ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(IntrinsicSize.Min)
+                                            .padding(horizontal = 24.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        AsyncImage(
+                                            model = episode.thumbnail,
+                                            contentDescription = episode.title,
+                                            modifier = Modifier
+                                                .width(96.dp)
+                                                .aspectRatio(16f / 9)
+                                                .background(MaterialTheme.colorScheme.surface)
+                                        )
+                                        Column(
+                                            modifier = Modifier.padding(vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                "Episode ${episode.number.clean()}",
+                                                style = MaterialTheme.typography.labelLarge
+                                            )
+                                            if (episode.title != null)
+                                                Text(
+                                                    episode.title!!,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.outlineVariant,
+                                                    maxLines = 2
+                                                )
+                                        }
                                     }
                                 }
                             }

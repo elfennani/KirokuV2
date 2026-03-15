@@ -13,6 +13,7 @@ import com.elfennani.kiroku.domain.repository.MediaRepository
 import com.elfennani.kiroku.domain.repository.SessionRepository
 import com.elfennani.kiroku.domain.repository.UserRepository
 import com.elfennani.kiroku.domain.usecase.FetchOnGoingMedia
+import com.elfennani.kiroku.domain.usecase.GetMediaItems
 import com.elfennani.kiroku.domain.usecase.GetOnGoingMedia
 import com.elfennani.kiroku.domain.usecase.GetSession
 import com.elfennani.kiroku.domain.usecase.GetViewer
@@ -39,9 +40,15 @@ val commonModule = module {
     single { get<AppDatabase>().getSessionDao() }
     single { get<AppDatabase>().getUserDao() }
     single { get<AppDatabase>().getMediaDao() }
+    single { get<AppDatabase>().getEpisodeDao() }
 
     // Sources
-    singleOf(::AllAnimeSource)
+    single{
+        AllAnimeSource(
+            allAnimeClient = get(named(ApolloClientSource.AllAnime)),
+            mediaDao = get()
+        )
+    }
 
     // Repositories
     single<SessionRepository> {
@@ -62,7 +69,8 @@ val commonModule = module {
             allAnimeSource = get(),
             aniListClient = get(named(ApolloClientSource.AniList)),
             mediaDao = get(),
-            getSession = get()
+            getSession = get(),
+            episodeDao = get(),
         )
     }
 
@@ -82,4 +90,5 @@ val commonModule = module {
     singleOf(::GetViewer)
     singleOf(::FetchOnGoingMedia)
     singleOf(::GetOnGoingMedia)
+    singleOf(::GetMediaItems)
 }

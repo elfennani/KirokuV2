@@ -15,5 +15,5 @@ val composeModule = module {
     viewModelOf(::HomeViewModel)
     viewModel { params -> NavigationViewModel(isAuthed = params.get()) }
     viewModel { params -> AuthViewModel(token = params.get(), get()) }
-    viewModel { params -> MediaViewModel(route = params.get(),mediaRepository = get()) }
+    viewModel { params -> MediaViewModel(route = params.get(),mediaRepository = get(), getMediaItems = get()) }
 }

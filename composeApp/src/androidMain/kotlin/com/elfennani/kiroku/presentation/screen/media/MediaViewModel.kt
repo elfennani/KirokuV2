@@ -2,16 +2,21 @@ package com.elfennani.kiroku.presentation.screen.media
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.elfennani.kiroku.domain.model.MediaType
 import com.elfennani.kiroku.domain.model.Resource
 import com.elfennani.kiroku.domain.repository.MediaRepository
+import com.elfennani.kiroku.domain.usecase.GetMediaItems
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MediaViewModel(
     private val route: MediaRoute,
-    private val mediaRepository: MediaRepository
+    private val mediaRepository: MediaRepository,
+    private val getMediaItems: GetMediaItems
 ) : ViewModel() {
     private val _state = MutableStateFlow(MediaUiState())
     val state = _state.asStateFlow()
@@ -24,8 +29,6 @@ class MediaViewModel(
             }
         }
 
-
-
         viewModelScope.launch {
             mediaRepository.fetchMedia(route.mediaId).let { res ->
                 when (res) {
@@ -36,6 +39,27 @@ class MediaViewModel(
                     }
 
                     else -> {}
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            _state.map { it.media?.type }.distinctUntilChanged().collect { type ->
+                if(type == MediaType.MANGA){
+                    // TODO: There's not a manga source yet.
+                    return@collect
+                }
+
+                if (type != null) {
+                    getMediaItems(
+                        route.mediaId,
+                        when (type) {
+                            MediaType.ANIME -> mediaRepository.animeSources.first().name
+                            MediaType.MANGA -> mediaRepository.mangaSources.first().name
+                        }
+                    ).collect { matchStatus ->
+                        _state.update { it.copy(items = matchStatus) }
+                    }
                 }
             }
         }

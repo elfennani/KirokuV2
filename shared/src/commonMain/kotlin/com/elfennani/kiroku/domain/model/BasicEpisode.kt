@@ -6,5 +6,5 @@ data class BasicEpisode(
     val title: String?,
     val thumbnail: String?,
     /** in seconds */
-    val duration: Long
+    val duration: Long?
 )
