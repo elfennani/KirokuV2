@@ -1,7 +1,21 @@
 package com.elfennani.kiroku.presentation.screen.media
 
 import android.util.Log
+import androidx.compose.animation.Animatable
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,33 +52,38 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.innerShadow
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.fromHtml
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import coil3.compose.AsyncImage
 import com.elfennani.kiroku.R
+import com.elfennani.kiroku.domain.model.Episode
 import com.elfennani.kiroku.domain.model.MatchStatus
 import com.elfennani.kiroku.domain.model.Media
 import com.elfennani.kiroku.domain.model.MediaItemList
@@ -74,6 +93,7 @@ import com.elfennani.kiroku.domain.model.label
 import com.elfennani.kiroku.presentation.component.MediaProgressBar
 import com.elfennani.kiroku.presentation.theme.AppTheme
 import com.elfennani.kiroku.utils.clean
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -406,44 +426,125 @@ private fun MediaScreen(
                                 when (state.items.items) {
                                     is MediaItemList.ChapterList -> item { Text("TODO") }
                                     is MediaItemList.EpisodeList -> items((state.items.items as MediaItemList.EpisodeList).episodes) { episode ->
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(IntrinsicSize.Min)
-                                                .padding(horizontal = 24.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                        ) {
-                                            AsyncImage(
-                                                model = episode.thumbnail,
-                                                contentDescription = episode.title,
-                                                modifier = Modifier
-                                                    .width(96.dp)
-                                                    .aspectRatio(16f / 9)
-                                                    .background(MaterialTheme.colorScheme.surface)
-                                            )
-                                            Column(
-                                                modifier = Modifier.padding(vertical = 4.dp)
-                                            ) {
-                                                Text(
-                                                    "Episode ${episode.number.clean()}",
-                                                    style = MaterialTheme.typography.labelLarge
-                                                )
-                                                if (episode.title != null)
-                                                    Text(
-                                                        episode.title!!,
-                                                        style = MaterialTheme.typography.bodySmall,
-                                                        color = MaterialTheme.colorScheme.outlineVariant,
-                                                        maxLines = 2
-                                                    )
-                                            }
-                                        }
+                                        EpisodeItem(
+                                            episode = episode
+                                        )
                                     }
                                 }
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EpisodeItem(
+    modifier: Modifier = Modifier,
+    episode: Episode
+) {
+    val width = LocalView.current.width
+    val offsetX = remember { Animatable(0f) }
+    val density = LocalDensity.current
+    val scope = rememberCoroutineScope()
+
+    Box(
+        modifier = modifier.height(IntrinsicSize.Min)
+    ) {
+        Row(
+            modifier = Modifier
+                .width(with(density) { offsetX.value.toDp() })
+                .fillMaxHeight()
+                .background(
+                    MaterialTheme.colorScheme.primary.copy(
+                        (offsetX.value / (width / 3)).coerceIn(0f, 1f)
+                    )
+                )
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+        ) {
+            AnimatedVisibility(
+                visible = offsetX.value > width / 3,
+                enter = fadeIn() + slideInVertically(),
+                exit = fadeOut() + slideOutVertically()
+            ) {
+                Icon(
+                    painterResource(R.drawable.outline_download_24),
+                    "Download",
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+                .combinedClickable(
+                    onClick = {},
+                    onLongClick = {}
+                )
+                .padding(horizontal = 24.dp, vertical = 6.dp)
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragStart = {},
+                        onDragEnd = {
+                            scope.launch {
+                                offsetX.animateTo(
+                                    0f,
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessMedium
+                                    ),
+                                )
+                            }
+                        },
+                        onDragCancel = {
+                            scope.launch {
+                                offsetX.animateTo(0f)
+                            }
+                        },
+                        onHorizontalDrag = { _, dragAmount ->
+                            scope.launch {
+                                offsetX.snapTo(
+                                    (offsetX.value + dragAmount).coerceIn(
+                                        minimumValue = 0f,
+                                        maximumValue = width.toFloat()
+                                    )
+                                )
+                            }
+                        }
+                    )
+                }
+                .offset(x = with(density) { offsetX.value.toDp() }),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            AsyncImage(
+                model = episode.thumbnail,
+                contentDescription = episode.title,
+                modifier = Modifier
+                    .width(112.dp)
+                    .aspectRatio(16f / 9)
+                    .background(MaterialTheme.colorScheme.surface)
+            )
+            Column(
+                modifier = Modifier.padding(vertical = 4.dp)
+            ) {
+                Text(
+                    "Episode ${episode.number.clean()}",
+                    style = MaterialTheme.typography.labelLarge
+                )
+                if (episode.title != null)
+                    Text(
+                        episode.title!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        maxLines = 2
+                    )
             }
         }
     }
