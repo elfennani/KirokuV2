@@ -1,5 +1,6 @@
 package com.elfennani.kiroku.presentation.screen.media
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,11 +33,24 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
@@ -76,6 +90,10 @@ fun MediaScreen(
         state = state,
         onNavigateBack = onNavigateBack
     )
+}
+
+fun Float.normalize(min: Float, max: Float): Float {
+    return ((this - min) / (max - min)).coerceIn(0f, 1f)
 }
 
 @Composable
@@ -118,17 +136,51 @@ private fun MediaScreen(
                 )
             }
         } else if (state.media != null) {
+            var bannerHeight by remember { mutableFloatStateOf(0f) }
+            var offsetY by remember { mutableFloatStateOf(0f) }
+            val normalizedOffset by remember {
+                derivedStateOf {
+                    offsetY.normalize(0f, bannerHeight * 0.75f)
+                }
+            }
+
+            LaunchedEffect(offsetY) {
+                Log.d("MediaScreen", offsetY.toString())
+            }
+
+            val nestedScrollConnection = object : NestedScrollConnection {
+
+                override fun onPostScroll(
+                    consumed: Offset,
+                    available: Offset,
+                    source: NestedScrollSource
+                ): Offset {
+                    offsetY -= consumed.y
+
+                    return super.onPostScroll(consumed, available, source)
+                }
+            }
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
-                Box {
+                val density = LocalDensity.current
+
+                Box(
+                    modifier = Modifier
+                        .graphicsLayer {
+                            bannerHeight = size.height
+                        }
+                        .offset(y = with(density) { -(normalizedOffset * (bannerHeight / 2)).toDp() })
+                        .alpha(1 - normalizedOffset)
+                ) {
                     AsyncImage(
                         model = state.media.banner,
                         contentDescription = state.media.title,
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(3f / 2)
-                            .background(MaterialTheme.colorScheme.surface),
+                            .background(MaterialTheme.colorScheme.surface)
+                            .scale(normalizedOffset * 0.25f + 1),
                         contentScale = ContentScale.Crop
                     )
 
@@ -138,6 +190,7 @@ private fun MediaScreen(
                             MaterialTheme.colorScheme.background
                         )
                     )
+
                     Box(
                         Modifier
                             .matchParentSize()
@@ -145,241 +198,245 @@ private fun MediaScreen(
                     )
                 }
 
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        bottom = 96.dp + WindowInsets.navigationBars.asPaddingValues()
-                            .calculateBottomPadding()
-                    )
+                Box(
+                    modifier = Modifier.nestedScroll(nestedScrollConnection)
                 ) {
-                    item {
-                        Column(
-                            modifier = Modifier
-                                .padding(top = it.calculateTopPadding())
-                                .padding(top = 72.dp)
-                                .padding(horizontal = 24.dp),
-                            verticalArrangement = Arrangement.spacedBy(24.dp)
-                        ) {
-                            Row() {
-                                IconButton(
-                                    modifier = Modifier.offset(x = (-12.dp)),
-                                    onClick = { onNavigateBack() }
-                                ) {
-                                    Icon(
-                                        modifier = Modifier.size(32.dp),
-                                        painter = painterResource(id = R.drawable.baseline_arrow_back_24),
-                                        contentDescription = null
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            bottom = 96.dp + WindowInsets.navigationBars.asPaddingValues()
+                                .calculateBottomPadding()
+                        )
+                    ) {
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .padding(top = it.calculateTopPadding())
+                                    .padding(top = 72.dp)
+                                    .padding(horizontal = 24.dp),
+                                verticalArrangement = Arrangement.spacedBy(24.dp)
+                            ) {
+                                Row() {
+                                    IconButton(
+                                        modifier = Modifier.offset(x = (-12.dp)),
+                                        onClick = { onNavigateBack() }
+                                    ) {
+                                        Icon(
+                                            modifier = Modifier.size(32.dp),
+                                            painter = painterResource(id = R.drawable.baseline_arrow_back_24),
+                                            contentDescription = null
+                                        )
+                                    }
+                                }
+
+                                AsyncImage(
+                                    model = state.media.cover,
+                                    contentDescription = state.media.title,
+                                    modifier = Modifier
+                                        .width(128.dp)
+                                        .aspectRatio(0.66f)
+                                        .background(MaterialTheme.colorScheme.surface),
+                                    contentScale = ContentScale.Crop
+                                )
+
+                                Column() {
+                                    Text(
+                                        text = state.media.type.name.uppercase(),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.outlineVariant
+                                    )
+                                    Text(
+                                        state.media.title,
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        maxLines = 2
                                     )
                                 }
-                            }
 
-                            AsyncImage(
-                                model = state.media.cover,
-                                contentDescription = state.media.title,
-                                modifier = Modifier
-                                    .width(128.dp)
-                                    .aspectRatio(0.66f)
-                                    .background(MaterialTheme.colorScheme.surface),
-                                contentScale = ContentScale.Crop
-                            )
-
-                            Column() {
-                                Text(
-                                    text = state.media.type.name.uppercase(),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.outlineVariant
-                                )
-                                Text(
-                                    state.media.title,
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    maxLines = 2
-                                )
-                            }
-
-                            Row(
-                                modifier = Modifier.height(IntrinsicSize.Min),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                if (state.media.status != null) {
-                                    MediaProgressBar(
-                                        modifier = Modifier.weight(1f),
-                                        media = state.media,
-                                        label = {
-                                            Text(
-                                                state.media.status!!.label(state.media.type),
-                                                style = MaterialTheme.typography.labelMedium
-                                            )
-                                        }
-                                    )
-                                    Spacer(Modifier)
+                                Row(
+                                    modifier = Modifier.height(IntrinsicSize.Min),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    if (state.media.status != null) {
+                                        MediaProgressBar(
+                                            modifier = Modifier.weight(1f),
+                                            media = state.media,
+                                            label = {
+                                                Text(
+                                                    state.media.status!!.label(state.media.type),
+                                                    style = MaterialTheme.typography.labelMedium
+                                                )
+                                            }
+                                        )
+                                        Spacer(Modifier)
+                                        VerticalDivider(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .padding(vertical = 12.dp),
+                                            color = MaterialTheme.colorScheme.outlineVariant
+                                        )
+                                    }
+                                    TextButton(onClick = {}) {
+                                        Text("Edit")
+                                    }
                                     VerticalDivider(
                                         modifier = Modifier
                                             .fillMaxHeight()
                                             .padding(vertical = 12.dp),
                                         color = MaterialTheme.colorScheme.outlineVariant
                                     )
+                                    TextButton(onClick = {}) {
+                                        Text("+1")
+                                    }
                                 }
-                                TextButton(onClick = {}) {
-                                    Text("Edit")
+
+
+                                if (state.media.description != null) {
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                                        horizontalAlignment = Alignment.End
+                                    ) {
+                                        Text(
+                                            "DESCRIPTION",
+                                            modifier = Modifier.fillMaxWidth(),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.outlineVariant,
+                                        )
+                                        Text(
+                                            AnnotatedString.fromHtml(state.media.description!!),
+                                            maxLines = 3,
+                                            overflow = TextOverflow.Ellipsis,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                        TextButton(
+                                            modifier = Modifier.offset(x = 12.dp),
+                                            onClick = {},
+                                            colors = ButtonDefaults.textButtonColors(
+                                                contentColor = MaterialTheme.colorScheme.onBackground
+                                            )
+                                        ) {
+                                            Text("More About")
+                                            Spacer(Modifier.width(8.dp))
+                                            Icon(
+                                                painterResource(R.drawable.outline_keyboard_arrow_right_24),
+                                                null
+                                            )
+                                        }
+                                    }
                                 }
-                                VerticalDivider(
+
+                                Text(
+                                    when (state.media.type) {
+                                        MediaType.ANIME -> "EPISODES"
+                                        MediaType.MANGA -> "CHAPTERS"
+                                    },
                                     modifier = Modifier
-                                        .fillMaxHeight()
-                                        .padding(vertical = 12.dp),
-                                    color = MaterialTheme.colorScheme.outlineVariant
+                                        .fillMaxWidth()
+                                        .padding(bottom = 8.dp),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.outlineVariant,
                                 )
-                                TextButton(onClick = {}) {
-                                    Text("+1")
+                            }
+                        }
+
+                        when (state.items) {
+                            MatchStatus.Loading -> item {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(128.dp),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    CircularProgressIndicator()
                                 }
                             }
 
-
-                            if (state.media.description != null) {
+                            MatchStatus.Unmatched -> item {
                                 Column(
-                                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                                    horizontalAlignment = Alignment.End
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 64.dp),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
+                                    Icon(painterResource(R.drawable.outline_error_24), "Error")
+                                    Spacer(Modifier.height(16.dp))
                                     Text(
-                                        "DESCRIPTION",
-                                        modifier = Modifier.fillMaxWidth(),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.outlineVariant,
+                                        "This media is not matched, please match it now",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        textAlign = TextAlign.Center
                                     )
-                                    Text(
-                                        AnnotatedString.fromHtml(state.media.description!!),
-                                        maxLines = 3,
-                                        overflow = TextOverflow.Ellipsis,
-                                        style = MaterialTheme.typography.bodySmall
-                                    )
-                                    TextButton(
-                                        modifier = Modifier.offset(x = 12.dp),
-                                        onClick = {},
-                                        colors = ButtonDefaults.textButtonColors(
-                                            contentColor = MaterialTheme.colorScheme.onBackground
-                                        )
-                                    ) {
-                                        Text("More About")
-                                        Spacer(Modifier.width(8.dp))
-                                        Icon(
-                                            painterResource(R.drawable.outline_keyboard_arrow_right_24),
-                                            null
-                                        )
+
+                                    TextButton(onClick = {}) {
+                                        Text("Match Now")
                                     }
                                 }
                             }
 
-                            Text(
-                                when (state.media.type) {
-                                    MediaType.ANIME -> "EPISODES"
-                                    MediaType.MANGA -> "CHAPTERS"
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 8.dp),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.outlineVariant,
-                            )
-                        }
-                    }
+                            is MatchStatus.Error -> item {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 64.dp),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(painterResource(R.drawable.outline_error_24), "Error")
+                                    Spacer(Modifier.height(16.dp))
+                                    Text(
+                                        "Failed to fetch episodes",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Text(
+                                        state.items.message,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        textAlign = TextAlign.Center,
+                                        color = MaterialTheme.colorScheme.outline
+                                    )
 
-                    when (state.items) {
-                        MatchStatus.Loading -> item {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(128.dp),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                CircularProgressIndicator()
-                            }
-                        }
-
-                        MatchStatus.Unmatched -> item {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 64.dp),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(painterResource(R.drawable.outline_error_24), "Error")
-                                Spacer(Modifier.height(16.dp))
-                                Text(
-                                    "This media is not matched, please match it now",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    textAlign = TextAlign.Center
-                                )
-
-                                TextButton(onClick = {}) {
-                                    Text("Match Now")
+                                    TextButton(onClick = {}) {
+                                        Text("Match Now")
+                                    }
                                 }
                             }
-                        }
 
-                        is MatchStatus.Error -> item {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 64.dp),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(painterResource(R.drawable.outline_error_24), "Error")
-                                Spacer(Modifier.height(16.dp))
-                                Text(
-                                    "Failed to fetch episodes",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    textAlign = TextAlign.Center
-                                )
-                                Text(
-                                    state.items.message,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    textAlign = TextAlign.Center,
-                                    color = MaterialTheme.colorScheme.outline
-                                )
-
-                                TextButton(onClick = {}) {
-                                    Text("Match Now")
-                                }
-                            }
-                        }
-
-                        is MatchStatus.Matched -> {
-                            when (state.items.items) {
-                                is MediaItemList.ChapterList -> item { Text("TODO") }
-                                is MediaItemList.EpisodeList -> items((state.items.items as MediaItemList.EpisodeList).episodes) { episode ->
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(IntrinsicSize.Min)
-                                            .padding(horizontal = 24.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        AsyncImage(
-                                            model = episode.thumbnail,
-                                            contentDescription = episode.title,
+                            is MatchStatus.Matched -> {
+                                when (state.items.items) {
+                                    is MediaItemList.ChapterList -> item { Text("TODO") }
+                                    is MediaItemList.EpisodeList -> items((state.items.items as MediaItemList.EpisodeList).episodes) { episode ->
+                                        Row(
                                             modifier = Modifier
-                                                .width(96.dp)
-                                                .aspectRatio(16f / 9)
-                                                .background(MaterialTheme.colorScheme.surface)
-                                        )
-                                        Column(
-                                            modifier = Modifier.padding(vertical = 4.dp)
+                                                .fillMaxWidth()
+                                                .height(IntrinsicSize.Min)
+                                                .padding(horizontal = 24.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                                         ) {
-                                            Text(
-                                                "Episode ${episode.number.clean()}",
-                                                style = MaterialTheme.typography.labelLarge
+                                            AsyncImage(
+                                                model = episode.thumbnail,
+                                                contentDescription = episode.title,
+                                                modifier = Modifier
+                                                    .width(96.dp)
+                                                    .aspectRatio(16f / 9)
+                                                    .background(MaterialTheme.colorScheme.surface)
                                             )
-                                            if (episode.title != null)
+                                            Column(
+                                                modifier = Modifier.padding(vertical = 4.dp)
+                                            ) {
                                                 Text(
-                                                    episode.title!!,
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.outlineVariant,
-                                                    maxLines = 2
+                                                    "Episode ${episode.number.clean()}",
+                                                    style = MaterialTheme.typography.labelLarge
                                                 )
+                                                if (episode.title != null)
+                                                    Text(
+                                                        episode.title!!,
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.outlineVariant,
+                                                        maxLines = 2
+                                                    )
+                                            }
                                         }
                                     }
                                 }
