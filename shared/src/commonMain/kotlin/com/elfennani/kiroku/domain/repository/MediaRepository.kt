@@ -27,6 +27,8 @@ interface MediaRepository {
     suspend fun fetchMediaItems(mediaId: Int, source: String): Resource<MediaItemList>
     fun getMediaItemsFlow(mediaId: Int, source: String): Flow<MediaItemList>
 
+    suspend fun deleteMatch(mediaId: Int, sourceName: String)
+
 
     suspend fun incrementProgress(mediaId: Int)
     suspend fun markEpisodeAsWatched(mediaId: Int, episodeNumber: Double)

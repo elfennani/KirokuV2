@@ -50,8 +50,24 @@ interface MediaDao {
     @Query("SELECT sourceId FROM `match` WHERE mediaId = :mediaId AND sourceName = :sourceName")
     fun getMediaSourceIdFlow(mediaId: Int, sourceName: String): Flow<String?>
 
+    @Query("DELETE FROM `match` WHERE mediaId = :mediaId AND sourceName = :sourceName")
+    suspend fun deleteMediaSourceMatch(mediaId: Int, sourceName: String)
+
+    @Query("DELETE FROM `episode` WHERE mediaId = :mediaId AND source = :sourceName")
+    suspend fun deleteAnimeEpisodes(mediaId: Int, sourceName: String)
+
+    @Query("DELETE FROM `chapters` WHERE mediaId = :mediaId AND source = :sourceName")
+    suspend fun deleteMangaChapters(mediaId: Int, sourceName: String)
+
     @Transaction
-    suspend fun insertOngoingMediaTransaction(mediaList: List<LocalMediaEntity>){
+    suspend fun deleteMatch(mediaId: Int, sourceName: String) {
+        deleteMediaSourceMatch(mediaId, sourceName)
+        deleteAnimeEpisodes(mediaId, sourceName)
+        deleteMangaChapters(mediaId, sourceName)
+    }
+
+    @Transaction
+    suspend fun insertOngoingMediaTransaction(mediaList: List<LocalMediaEntity>) {
         clearOngoingMedia()
         insertMedia(mediaList)
         insertOngoingMedia(mediaList.map { OngoingMediaEntity(it.id) })

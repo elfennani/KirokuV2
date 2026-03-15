@@ -30,6 +30,8 @@ import com.elfennani.kiroku.presentation.screen.home.HomeRoute
 import com.elfennani.kiroku.presentation.screen.home.HomeScreen
 import com.elfennani.kiroku.presentation.screen.login.LoginRoute
 import com.elfennani.kiroku.presentation.screen.login.LoginScreen
+import com.elfennani.kiroku.presentation.screen.match.MatchRoute
+import com.elfennani.kiroku.presentation.screen.match.MatchScreen
 import com.elfennani.kiroku.presentation.screen.media.MediaRoute
 import com.elfennani.kiroku.presentation.screen.media.MediaScreen
 import org.koin.compose.viewmodel.koinViewModel
@@ -80,7 +82,7 @@ fun Navigation(isAuthed: Boolean) {
                 ContentTransform(
                     targetContentEnter = fadeIn() + scaleIn(initialScale = 0.9f),
                     initialContentExit = fadeOut() + slideOutHorizontally(
-                        targetOffsetX = { it/2 },
+                        targetOffsetX = { it / 2 },
                     ) + scaleOut(targetScale = 0.9f)
                 )
             },
@@ -88,7 +90,7 @@ fun Navigation(isAuthed: Boolean) {
                 ContentTransform(
                     targetContentEnter = fadeIn() + scaleIn(initialScale = 0.9f),
                     initialContentExit = fadeOut() + slideOutHorizontally(
-                        targetOffsetX = { it/2 },
+                        targetOffsetX = { it / 2 },
                     ) + scaleOut(targetScale = 0.9f)
                 )
             },
@@ -120,6 +122,12 @@ fun Navigation(isAuthed: Boolean) {
                         route = it,
                         onNavigate = viewModel::navigateTo,
                         onNavigateBack = viewModel::back
+                    )
+                }
+                entry<MatchRoute> {
+                    MatchScreen(
+                        route = it,
+                        onNavigateBack = viewModel::back,
                     )
                 }
             }

@@ -12,4 +12,6 @@ data class BasicMedia(
     val cover: String?,
     /** Any additional metadata that might be beneficial to display to the user. */
     val metadata: Map<String, String>,
+    /** Headers required to display images if needed */
+    val headers: Map<String, String> = emptyMap()
 )

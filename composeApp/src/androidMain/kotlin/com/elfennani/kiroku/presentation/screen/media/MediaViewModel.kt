@@ -45,23 +45,30 @@ class MediaViewModel(
 
         viewModelScope.launch {
             _state.map { it.media?.type }.distinctUntilChanged().collect { type ->
-                if(type == MediaType.MANGA){
-                    // TODO: There's not a manga source yet.
-                    return@collect
-                }
-
                 if (type != null) {
+                    val sourceName = when (type) {
+                        MediaType.ANIME -> mediaRepository.animeSources.first().name
+                        MediaType.MANGA -> mediaRepository.mangaSources.first().name
+                    }
+                    _state.update { it.copy(sourceName = sourceName) }
                     getMediaItems(
                         route.mediaId,
-                        when (type) {
-                            MediaType.ANIME -> mediaRepository.animeSources.first().name
-                            MediaType.MANGA -> mediaRepository.mangaSources.first().name
-                        }
+                        sourceName
                     ).collect { matchStatus ->
                         _state.update { it.copy(items = matchStatus) }
                     }
                 }
             }
+        }
+    }
+
+    fun unmatch() {
+        viewModelScope.launch {
+            if (state.value.sourceName != null)
+                mediaRepository.deleteMatch(
+                    mediaId = route.mediaId,
+                    sourceName = state.value.sourceName!!
+                )
         }
     }
 }

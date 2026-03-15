@@ -25,6 +25,8 @@ interface AnimeSource {
      */
     suspend fun match(mediaId: Int, sourceId: String)
 
+    suspend fun deleteMatch(mediaId: Int)
+
     /**
      * Get the source id of the show with the given id.
      * If the show has not been matched, return null.

@@ -7,6 +7,7 @@ data class Chapter(
     val id: String,
     val source: String,
     val title: String,
-    val chapter: Double,
-    val uploaded: Instant?
+    val number: Double,
+    val uploaded: Instant?,
+    val views: Int?
 )

@@ -1,19 +1,15 @@
 package com.elfennani.kiroku.presentation.screen.media
 
 import android.util.Log
-import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -57,14 +53,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.innerShadow
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -93,6 +85,7 @@ import com.elfennani.kiroku.domain.model.MediaStatus
 import com.elfennani.kiroku.domain.model.MediaType
 import com.elfennani.kiroku.domain.model.label
 import com.elfennani.kiroku.presentation.component.MediaProgressBar
+import com.elfennani.kiroku.presentation.screen.match.MatchRoute
 import com.elfennani.kiroku.presentation.theme.AppTheme
 import com.elfennani.kiroku.utils.clean
 import kotlinx.coroutines.launch
@@ -110,7 +103,11 @@ fun MediaScreen(
 
     MediaScreen(
         state = state,
-        onNavigateBack = onNavigateBack
+        onUnmatch = viewModel::unmatch,
+        onNavigateBack = onNavigateBack,
+        onNavigateToMatch = {
+            onNavigate(MatchRoute(route.mediaId, state.media!!.title, state.sourceName!!))
+        }
     )
 }
 
@@ -121,7 +118,9 @@ fun Float.normalize(min: Float, max: Float): Float {
 @Composable
 private fun MediaScreen(
     state: MediaUiState = MediaUiState(),
+    onUnmatch: () -> Unit = {},
     onNavigateBack: () -> Unit = {},
+    onNavigateToMatch: () -> Unit = {}
 ) {
     Scaffold() {
         if (state.isLoading && state.media == null && state.error == null) {
@@ -347,17 +346,30 @@ private fun MediaScreen(
                                     }
                                 }
 
-                                Text(
-                                    when (state.media.type) {
-                                        MediaType.ANIME -> "EPISODES"
-                                        MediaType.MANGA -> "CHAPTERS"
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 8.dp),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.outlineVariant,
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        when (state.media.type) {
+                                            MediaType.ANIME -> "EPISODES"
+                                            MediaType.MANGA -> "CHAPTERS"
+                                        },
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.outlineVariant,
+                                    )
+                                    Spacer(Modifier.weight(1f))
+
+                                    TextButton(
+                                        modifier = Modifier.offset(x = 12.dp),
+                                        onClick = { onUnmatch() }
+                                    ) {
+                                        Text(
+                                            "unmatch",
+                                            style = MaterialTheme.typography.labelSmall,
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -378,7 +390,7 @@ private fun MediaScreen(
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(vertical = 64.dp),
+                                        .padding(vertical = 64.dp, horizontal = 24.dp),
                                     verticalArrangement = Arrangement.Center,
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
@@ -389,8 +401,9 @@ private fun MediaScreen(
                                         style = MaterialTheme.typography.titleMedium,
                                         textAlign = TextAlign.Center
                                     )
+                                    Spacer(Modifier.height(16.dp))
 
-                                    TextButton(onClick = {}) {
+                                    TextButton(onClick = { onNavigateToMatch() }) {
                                         Text("Match Now")
                                     }
                                 }
@@ -400,7 +413,7 @@ private fun MediaScreen(
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(vertical = 64.dp),
+                                        .padding(vertical = 64.dp, horizontal = 24.dp),
                                     verticalArrangement = Arrangement.Center,
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
@@ -418,7 +431,9 @@ private fun MediaScreen(
                                         color = MaterialTheme.colorScheme.outline
                                     )
 
-                                    TextButton(onClick = {}) {
+                                    Spacer(Modifier.height(16.dp))
+
+                                    TextButton(onClick = { onNavigateToMatch() }) {
                                         Text("Match Now")
                                     }
                                 }
@@ -426,7 +441,36 @@ private fun MediaScreen(
 
                             is MatchStatus.Matched -> {
                                 when (state.items.items) {
-                                    is MediaItemList.ChapterList -> item { Text("TODO") }
+                                    is MediaItemList.ChapterList -> items((state.items.items as MediaItemList.ChapterList).chapters) { chapter ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(IntrinsicSize.Min)
+                                                .combinedClickable(
+                                                    onClick = {},
+                                                    onLongClick = {}
+                                                )
+                                                .padding(horizontal = 24.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.padding(vertical = 4.dp)
+                                            ) {
+                                                Text(
+                                                    "Chapter ${chapter.number.clean()}",
+                                                    style = MaterialTheme.typography.labelLarge
+                                                )
+                                                Text(
+                                                    "${chapter.views} Views",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.outlineVariant,
+                                                    maxLines = 2
+                                                )
+                                            }
+                                        }
+                                    }
+
                                     is MediaItemList.EpisodeList -> items((state.items.items as MediaItemList.EpisodeList).episodes) { episode ->
                                         EpisodeItem(
                                             episode = episode

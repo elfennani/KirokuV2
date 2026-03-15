@@ -9,10 +9,12 @@ import androidx.room.RoomDatabaseConstructor
 import androidx.room.TypeConverters
 import androidx.room.migration.AutoMigrationSpec
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.elfennani.kiroku.data.local.dao.ChapterDao
 import com.elfennani.kiroku.data.local.dao.EpisodeDao
 import com.elfennani.kiroku.data.local.dao.MediaDao
 import com.elfennani.kiroku.data.local.dao.SessionDao
 import com.elfennani.kiroku.data.local.dao.UserDao
+import com.elfennani.kiroku.data.local.entity.ChapterEntity
 import com.elfennani.kiroku.data.local.entity.EpisodeEntity
 import com.elfennani.kiroku.data.local.entity.LocalMediaEntity
 import com.elfennani.kiroku.data.local.entity.MatchEntity
@@ -30,11 +32,13 @@ import kotlinx.coroutines.IO
         LocalMediaEntity::class,
         OngoingMediaEntity::class,
         MatchEntity::class,
-        EpisodeEntity::class
+        EpisodeEntity::class,
+        ChapterEntity::class
     ],
-    version = 2,
+    version = 3,
     autoMigrations = [
-        AutoMigration(1, 2)
+        AutoMigration(1, 2),
+        AutoMigration(2, 3),
     ]
 )
 @TypeConverters(Converters::class)
@@ -44,6 +48,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun getUserDao(): UserDao
     abstract fun getMediaDao(): MediaDao
     abstract fun getEpisodeDao(): EpisodeDao
+    abstract fun getChapterDao(): ChapterDao
 }
 
 // The Room compiler generates the `actual` implementations.

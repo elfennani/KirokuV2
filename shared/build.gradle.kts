@@ -33,7 +33,8 @@ kotlin {
             // put your Multiplatform dependencies here
             implementation("com.apollographql.apollo:apollo-runtime:5.0.0-alpha.5")
             implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.serialization)
+            implementation(libs.ktor.client.negotiation)
             implementation(libs.kotlinx.coroutines.core)
             implementation(project.dependencies.platform("io.insert-koin:koin-bom:4.2.0-RC1"))
             implementation("io.insert-koin:koin-core")
@@ -44,6 +45,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
 
+            implementation(libs.ksoup.html)
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)

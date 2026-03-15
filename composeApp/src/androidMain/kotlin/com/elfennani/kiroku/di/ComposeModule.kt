@@ -4,6 +4,7 @@ import com.elfennani.kiroku.presentation.screen.NavigationViewModel
 import com.elfennani.kiroku.presentation.screen.auth.AuthViewModel
 import com.elfennani.kiroku.presentation.screen.home.HomeViewModel
 import com.elfennani.kiroku.presentation.screen.login.LoginViewModel
+import com.elfennani.kiroku.presentation.screen.match.MatchViewModel
 import com.elfennani.kiroku.presentation.screen.media.MediaViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -15,5 +16,12 @@ val composeModule = module {
     viewModelOf(::HomeViewModel)
     viewModel { params -> NavigationViewModel(isAuthed = params.get()) }
     viewModel { params -> AuthViewModel(token = params.get(), get()) }
-    viewModel { params -> MediaViewModel(route = params.get(),mediaRepository = get(), getMediaItems = get()) }
+    viewModel { params ->
+        MediaViewModel(
+            route = params.get(),
+            mediaRepository = get(),
+            getMediaItems = get()
+        )
+    }
+    viewModel { params -> MatchViewModel(route = params.get(), mediaRepository = get()) }
 }

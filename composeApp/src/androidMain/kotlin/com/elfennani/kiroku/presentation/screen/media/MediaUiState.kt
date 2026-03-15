@@ -10,5 +10,6 @@ data class MediaUiState(
     val media: Media? = null,
     val isLoading: Boolean = true,
     val error: String? = null,
-    val items: MatchStatus = MatchStatus.Loading
+    val items: MatchStatus = MatchStatus.Loading,
+    val sourceName: String? = null
 )

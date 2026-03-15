@@ -31,21 +31,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        Toast.makeText(
-            this,
-            "Received new intent: $intent",
-            Toast.LENGTH_SHORT
-        ).show()
         handleIntent(intent)
     }
 
     fun handleIntent(intent: Intent) {
         intent.data?.let {
-            Toast.makeText(
-                this,
-                "Received deep link: $it",
-                Toast.LENGTH_SHORT
-            ).show()
             ExternalUriHandler.onNewUri(it.toString())
         }
     }

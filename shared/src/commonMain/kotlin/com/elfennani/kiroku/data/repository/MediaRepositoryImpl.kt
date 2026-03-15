@@ -2,6 +2,8 @@ package com.elfennani.kiroku.data.repository
 
 import com.apollographql.apollo.ApolloClient
 import com.elfennani.kiroku.data.datasource.AllAnimeSource
+import com.elfennani.kiroku.data.datasource.MangaKakalotSource
+import com.elfennani.kiroku.data.local.dao.ChapterDao
 import com.elfennani.kiroku.data.local.dao.EpisodeDao
 import com.elfennani.kiroku.data.local.dao.MediaDao
 import com.elfennani.kiroku.data.local.entity.EpisodeEntity
@@ -35,15 +37,17 @@ private val TAG = "MediaRepository"
 
 class MediaRepositoryImpl(
     private val allAnimeSource: AllAnimeSource,
+    private val mangaKakalot: MangaKakalotSource,
     private val aniListClient: ApolloClient,
     private val mediaDao: MediaDao,
     private val episodeDao: EpisodeDao,
+    private val chapterDao: ChapterDao,
     private val getSession: GetSession,
 ) : MediaRepository {
     override val animeSources: List<AnimeSource>
         get() = listOf(allAnimeSource)
     override val mangaSources: List<MangaSource>
-        get() = emptyList()
+        get() = listOf(mangaKakalot)
 
     override fun getSourcesByType(type: MediaType): List<String> {
         return when (type) {
@@ -121,10 +125,15 @@ class MediaRepositoryImpl(
         sourceName: String,
         sourceId: String
     ) {
-        animeSources.firstOrNull { it.name == sourceName }?.match(mediaId, sourceId)
-            ?: throw Exception(
-                "Source not found"
-            )
+        val isAnimeSource =
+            animeSources.any { it.name == sourceName }
+        if (isAnimeSource)
+            animeSources.firstOrNull { it.name == sourceName }?.match(mediaId, sourceId)
+                ?: throw Exception(
+                    "Source not found"
+                )
+        else
+            mangaSources.firstOrNull { it.name == sourceName }?.match(mediaId, sourceId)
     }
 
     override suspend fun autoMatchMedia(mediaId: Int, sourceName: String) {
@@ -146,9 +155,11 @@ class MediaRepositoryImpl(
                 }
 
                 matchMedia(mediaId, sourceName, show.id)
+            } else {
+                throw Exception("Media not found")
             }
         } else {
-            TODO()
+            throw Exception("Auto matching manga is not supported")
         }
     }
 
@@ -196,7 +207,18 @@ class MediaRepositoryImpl(
                 MediaItemList.EpisodeList(episodes.map { it.asDomain() })
             }
         } else {
-            TODO()
+            val source = (mangaSources).firstOrNull { it.name == source }
+                ?: throw Exception("Source not found")
+            return resourceOf {
+                val chapters = source.getChapters(mediaId)
+
+                chapterDao.upsertAllTransaction(
+                    mediaId = mediaId,
+                    chapters = chapters.map { it.asEntity(mediaId) }
+                )
+
+                MediaItemList.ChapterList(chapters = chapters)
+            }
         }
     }
 
@@ -213,8 +235,22 @@ class MediaRepositoryImpl(
                 MediaItemList.EpisodeList(episodes.map { it.asDomain() })
             }
         } else {
-            TODO()
+            val source = (mangaSources).firstOrNull { it.name == source }
+                ?: throw Exception("Source not found")
+
+            return chapterDao.getAllFlow(mediaId).map { chapters ->
+                MediaItemList.ChapterList(chapters = chapters.map { it.asDomain() })
+            }
         }
+    }
+
+    override suspend fun deleteMatch(mediaId: Int, sourceName: String) {
+        val deleteMatch =
+            animeSources.firstOrNull { it.name == sourceName }?.let { it::deleteMatch }
+                ?: mangaSources.firstOrNull { it.name == sourceName }?.let { it::deleteMatch }
+                ?: throw Exception("Source not found")
+
+        deleteMatch(mediaId)
     }
 
     override suspend fun incrementProgress(mediaId: Int) {

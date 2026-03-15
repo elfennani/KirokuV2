@@ -79,6 +79,10 @@ class AllAnimeSource(
         return mediaDao.getMediaSourceId(mediaId, name)
     }
 
+    override suspend fun deleteMatch(mediaId: Int) {
+        mediaDao.deleteMatch(mediaId, name)
+    }
+
     override suspend fun getEpisodes(mediaId: Int): List<BasicEpisode> {
         val showId = getSourceId(mediaId) ?: throw Exception("Show has not been matched yet")
 
