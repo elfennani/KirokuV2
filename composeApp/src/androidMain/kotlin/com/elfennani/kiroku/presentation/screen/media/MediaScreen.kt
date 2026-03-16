@@ -86,6 +86,8 @@ import com.elfennani.kiroku.domain.model.MediaType
 import com.elfennani.kiroku.domain.model.label
 import com.elfennani.kiroku.presentation.component.MediaProgressBar
 import com.elfennani.kiroku.presentation.screen.match.MatchRoute
+import com.elfennani.kiroku.presentation.screen.media.components.ChapterItem
+import com.elfennani.kiroku.presentation.screen.media.components.EpisodeItem
 import com.elfennani.kiroku.presentation.theme.AppTheme
 import com.elfennani.kiroku.utils.clean
 import kotlinx.coroutines.launch
@@ -442,33 +444,9 @@ private fun MediaScreen(
                             is MatchStatus.Matched -> {
                                 when (state.items.items) {
                                     is MediaItemList.ChapterList -> items((state.items.items as MediaItemList.ChapterList).chapters) { chapter ->
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(IntrinsicSize.Min)
-                                                .combinedClickable(
-                                                    onClick = {},
-                                                    onLongClick = {}
-                                                )
-                                                .padding(horizontal = 24.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                        ) {
-                                            Column(
-                                                modifier = Modifier.padding(vertical = 4.dp)
-                                            ) {
-                                                Text(
-                                                    "Chapter ${chapter.number.clean()}",
-                                                    style = MaterialTheme.typography.labelLarge
-                                                )
-                                                Text(
-                                                    "${chapter.views} Views",
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.outlineVariant,
-                                                    maxLines = 2
-                                                )
-                                            }
-                                        }
+                                        ChapterItem(
+                                            chapter = chapter
+                                        )
                                     }
 
                                     is MediaItemList.EpisodeList -> items((state.items.items as MediaItemList.EpisodeList).episodes) { episode ->
@@ -486,119 +464,6 @@ private fun MediaScreen(
     }
 }
 
-@Composable
-private fun EpisodeItem(
-    modifier: Modifier = Modifier,
-    episode: Episode
-) {
-    val width = LocalView.current.width
-    val offsetX = remember { Animatable(0f) }
-    val density = LocalDensity.current
-    val scope = rememberCoroutineScope()
-
-    Box(
-        modifier = modifier.height(IntrinsicSize.Min)
-    ) {
-        Row(
-            modifier = Modifier
-                .width(with(density) { offsetX.value.toDp() })
-                .fillMaxHeight()
-                .background(
-                    MaterialTheme.colorScheme.primary.copy(
-                        (offsetX.value / (width / 3)).coerceIn(0f, 1f)
-                    )
-                )
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
-        ) {
-            AnimatedVisibility(
-                visible = offsetX.value > width / 3,
-                enter = fadeIn() + slideInVertically(),
-                exit = fadeOut() + slideOutVertically()
-            ) {
-                val hapticFeedback = LocalHapticFeedback.current
-                LaunchedEffect(Unit) {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                }
-                Icon(
-                    painterResource(R.drawable.outline_download_24),
-                    "Download",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(IntrinsicSize.Min)
-                .combinedClickable(
-                    onClick = {},
-                    onLongClick = {}
-                )
-                .padding(horizontal = 24.dp, vertical = 6.dp)
-                .pointerInput(Unit) {
-                    detectHorizontalDragGestures(
-                        onDragStart = {},
-                        onDragEnd = {
-                            scope.launch {
-                                offsetX.animateTo(
-                                    0f,
-                                    animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                                        stiffness = Spring.StiffnessMedium
-                                    ),
-                                )
-                            }
-                        },
-                        onDragCancel = {
-                            scope.launch {
-                                offsetX.animateTo(0f)
-                            }
-                        },
-                        onHorizontalDrag = { _, dragAmount ->
-                            scope.launch {
-                                offsetX.snapTo(
-                                    (offsetX.value + dragAmount).coerceIn(
-                                        minimumValue = 0f,
-                                        maximumValue = width.toFloat() / 2
-                                    )
-                                )
-                            }
-                        }
-                    )
-                }
-                .offset(x = with(density) { offsetX.value.toDp() }),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            AsyncImage(
-                model = episode.thumbnail,
-                contentDescription = episode.title,
-                modifier = Modifier
-                    .width(112.dp)
-                    .aspectRatio(16f / 9)
-                    .background(MaterialTheme.colorScheme.surface)
-            )
-            Column(
-                modifier = Modifier.padding(vertical = 4.dp)
-            ) {
-                Text(
-                    "Episode ${episode.number.clean()}",
-                    style = MaterialTheme.typography.labelLarge
-                )
-                if (episode.title != null)
-                    Text(
-                        episode.title!!,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                        maxLines = 2
-                    )
-            }
-        }
-    }
-}
 
 @Preview
 @Composable
