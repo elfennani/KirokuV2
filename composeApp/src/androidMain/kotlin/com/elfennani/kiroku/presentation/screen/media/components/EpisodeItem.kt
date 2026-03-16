@@ -138,16 +138,3 @@ fun EpisodeItem(
         }
     }
 }
-
-@Composable
-fun Draggable(
-    modifier: Modifier = Modifier,
-    backdrop: @Composable BoxScope.() -> Unit,
-    content: @Composable BoxScope.() -> Unit
-) {
-    Box(
-        modifier = modifier.height(IntrinsicSize.Min)
-    ) {
-
-    }
-}

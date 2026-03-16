@@ -6,6 +6,7 @@ import com.elfennani.kiroku.domain.model.Media
 import com.elfennani.kiroku.domain.model.MediaItemList
 import com.elfennani.kiroku.domain.model.MediaType
 import com.elfennani.kiroku.domain.model.Resource
+import com.elfennani.kiroku.domain.model.VideoSource
 import kotlinx.coroutines.flow.Flow
 
 interface MediaRepository {
@@ -29,6 +30,9 @@ interface MediaRepository {
 
     suspend fun deleteMatch(mediaId: Int, sourceName: String)
 
+    suspend fun fetchEpisodeSources(
+        mediaId: Int, sourceName: String, episodeNumber: Double
+    ): List<VideoSource>
 
     suspend fun incrementProgress(mediaId: Int)
     suspend fun markEpisodeAsWatched(mediaId: Int, episodeNumber: Double)

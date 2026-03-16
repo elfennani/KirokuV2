@@ -19,6 +19,7 @@ import com.elfennani.kiroku.domain.model.Media
 import com.elfennani.kiroku.domain.model.MediaItemList
 import com.elfennani.kiroku.domain.model.MediaType
 import com.elfennani.kiroku.domain.model.Resource
+import com.elfennani.kiroku.domain.model.VideoSource
 import com.elfennani.kiroku.domain.model.resourceOf
 import com.elfennani.kiroku.domain.repository.MediaRepository
 import com.elfennani.kiroku.domain.usecase.GetSession
@@ -251,6 +252,18 @@ class MediaRepositoryImpl(
                 ?: throw Exception("Source not found")
 
         deleteMatch(mediaId)
+    }
+
+    override suspend fun fetchEpisodeSources(
+        mediaId: Int,
+        sourceName: String,
+        episodeNumber: Double
+    ): List<VideoSource> {
+        val source =
+            animeSources.firstOrNull { it.name == sourceName }
+                ?: throw Exception("Anime source not found!")
+
+        return source.getSources(mediaId, episodeNumber)
     }
 
     override suspend fun incrementProgress(mediaId: Int) {

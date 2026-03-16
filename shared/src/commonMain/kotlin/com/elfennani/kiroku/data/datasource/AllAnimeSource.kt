@@ -1,24 +1,37 @@
 package com.elfennani.kiroku.data.datasource
 
 import com.apollographql.apollo.ApolloClient
+import com.elfennani.kiroku.data.getKtorClient
 import com.elfennani.kiroku.data.local.dao.MediaDao
 import com.elfennani.kiroku.data.local.entity.MatchEntity
 import com.elfennani.kiroku.domain.datasource.AnimeSource
 import com.elfennani.kiroku.domain.model.BasicEpisode
 import com.elfennani.kiroku.domain.model.BasicMedia
-import com.elfennani.kiroku.domain.model.Result
+import com.elfennani.kiroku.domain.model.VideoAudio
 import com.elfennani.kiroku.domain.model.VideoSource
+import com.elfennani.kiroku.domain.model.VideoType
 import com.elfennani.kiroku.utils.clean
+import com.elfennani.shared.allanime.GetEpisodeByIdQuery
 import com.elfennani.shared.allanime.GetEpisodeListQuery
 import com.elfennani.shared.allanime.GetShowByIdQuery
 import com.elfennani.shared.allanime.SearchShowsQuery
 import com.elfennani.shared.allanime.type.SortBy
+import com.elfennani.shared.allanime.type.VaildTranslationTypeEnumType
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlin.math.roundToLong
 
 class AllAnimeSource(
     private val allAnimeClient: ApolloClient,
-    private val mediaDao: MediaDao
+    private val mediaDao: MediaDao,
+    private val httpClient: HttpClient
 ) : AnimeSource {
     override val name: String
         get() = "AllAnime"
@@ -142,6 +155,168 @@ class AllAnimeSource(
         mediaId: Int,
         episodeNumber: Double
     ): List<VideoSource> {
-        TODO("Not yet implemented")
+        return coroutineScope {
+            val showId = getSourceId(mediaId) ?: throw Exception("Show has not been matched yet")
+            val episode = getEpisodes(mediaId).firstOrNull { it.number == episodeNumber }
+                ?: throw Exception("Episode not found")
+
+            val fetch: suspend (VaildTranslationTypeEnumType) -> GetEpisodeByIdQuery.Data = {
+                allAnimeClient
+                    .query(
+                        GetEpisodeByIdQuery(
+                            showId = showId,
+                            episodeString = episode.number.clean(),
+                            audio = it
+                        )
+                    )
+                    .execute()
+                    .dataOrThrow()
+            }
+
+            val sub = async { fetch(VaildTranslationTypeEnumType.sub) }.await()
+            val dub = async { fetch(VaildTranslationTypeEnumType.dub) }.await()
+
+            val urls = coroutineScope {
+                val sourceUrls = convertToSourceUrls(dub.episode?.sourceUrls).map {
+                    Pair(VideoAudio.DUBBED, it)
+                } + convertToSourceUrls(
+                    sub.episode?.sourceUrls
+                ).map {
+                    Pair(VideoAudio.SUBBED, it)
+                }
+
+
+                sourceUrls
+                    .filter { (_, source) ->
+                        PROVIDERS.contains(source.sourceName)
+                    }
+                    .mapNotNull { (audio, source) ->
+                        try {
+                            val baseUrl = "https://allanime.day"
+                            println("Decrypting ${source.sourceUrl}");
+                            val path = source.sourceUrl
+                                // Removes the filler two dashes `--`
+                                .drop(2)
+                                // Split the string into an array of two characters
+                                .chunked(2)
+                                // Decrypt the each chunk then combine them back into a proper string
+                                .map { chunk -> chunk.decrypt() }
+                                .joinToString("")
+                                .replace("clock", "clock.json")
+
+                            val type =
+                                if (source.sourceName in M3U8_PROVIDERS)
+                                    VideoType.HLS
+                                else
+                                    VideoType.MP4
+
+                            Triple(audio, type, "$baseUrl$path")
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            null
+                        }
+                    }.map { (audio, type, url) ->
+                        async {
+                            try {
+                                println("Fetching... $type: $url")
+                                val response = httpClient.get(url)
+                                val data = response.body<GetEpisodeLinkResponse>()
+
+                                val link =
+                                    data.links.firstOrNull()?.link ?: data.links.firstOrNull()?.src
+                                    ?: return@async null
+                                println("Got link: $type: $link")
+
+                                Triple(audio, type, link)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                return@async null
+                            }
+                        }
+                    }
+            }.awaitAll().filterNotNull()
+
+            urls.map { (audio, type, url) ->
+                VideoSource(
+                    type = type,
+                    name = name,
+                    url = url,
+                    audio = audio,
+                )
+            }
+        }
     }
+
+    /**
+     * Some urls in AllAnime are encrypted, this function decrypts them.
+     */
+    private fun String.decrypt(): Char {
+        if (this == "01") return '9';
+        if (this == "08") return '0';
+        if (this == "05") return '=';
+        if (this == "0a") return '2';
+        if (this == "0b") return '3';
+        if (this == "0c") return '4';
+        if (this == "07") return '?';
+        if (this == "00") return '8';
+        if (this == "5c") return 'd';
+        if (this == "0f") return '7';
+        if (this == "5e") return 'f';
+        if (this == "17") return '/';
+        if (this == "54") return 'l';
+        if (this == "09") return '1';
+        if (this == "48") return 'p';
+        if (this == "4f") return 'w';
+        if (this == "0e") return '6';
+        if (this == "5b") return 'c';
+        if (this == "5d") return 'e';
+        if (this == "0d") return '5';
+        if (this == "53") return 'k';
+        if (this == "1e") return '&';
+        if (this == "5a") return 'b';
+        if (this == "59") return 'a';
+        if (this == "4a") return 'r';
+        if (this == "4c") return 't';
+        if (this == "4e") return 'v';
+        if (this == "57") return 'o';
+        if (this == "51") return 'i';
+        if (this == "50") return 'h';
+        if (this == "4b") return 's';
+        if (this == "02") return ':';
+        if (this == "55") return 'm';
+        if (this == "4d") return 'u';
+        if (this == "16") return '.';
+
+        throw Exception("Unsupported character: $this")
+    }
+
+
+    private data class SourceMap(
+        val sourceUrl: String,
+        val sourceName: String,
+    )
+
+    private fun convertToSourceUrls(data: Any?): List<SourceMap> {
+        val list = data as List<*>
+
+        return list.map {
+            val sourceMap = it as Map<*, *>
+
+            SourceMap(
+                sourceUrl = sourceMap["sourceUrl"] as String,
+                sourceName = sourceMap["sourceName"] as String,
+            )
+        }
+    }
+
+    @Serializable()
+    private data class GetEpisodeLinkResponse(
+        val links: List<EpisodeLinkData>
+    )
+
+    @Serializable
+    private data class EpisodeLinkData(
+        val link: String? = null,
+        val src: String? = null
+    )
 }

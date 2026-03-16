@@ -66,7 +66,8 @@ val commonModule = module {
     single {
         AllAnimeSource(
             allAnimeClient = get(named(ApolloClientSource.AllAnime)),
-            mediaDao = get()
+            mediaDao = get(),
+            httpClient = get()
         )
     }
     singleOf(::MangaKakalotSource)

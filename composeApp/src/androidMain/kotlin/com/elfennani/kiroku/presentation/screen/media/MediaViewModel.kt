@@ -45,6 +45,7 @@ class MediaViewModel(
 
         viewModelScope.launch {
             _state.map { it.media?.type }.distinctUntilChanged().collect { type ->
+
                 if (type != null) {
                     val sourceName = when (type) {
                         MediaType.ANIME -> mediaRepository.animeSources.first().name
