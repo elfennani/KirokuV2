@@ -56,8 +56,8 @@ fun ChapterItem(
 ) {
     val properties = remember(chapter.views, chapter.uploaded) {
         buildList {
-            chapter.views?.let { add("${it.readable()} Views") }
             chapter.uploaded?.let { add(it.readable()) }
+            chapter.views?.let { add("${it.readable()} Views") }
         }
     }
 

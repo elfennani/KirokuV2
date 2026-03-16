@@ -37,6 +37,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
@@ -55,6 +57,17 @@ import kotlinx.coroutines.launch
 
 private const val TAG = "EpisodeItem"
 
+private fun Long.secondsToReadable(): String {
+    val hrs = this / 3600
+    val mins = (this % 3600) / 60
+    val secs = this % 60
+
+    return if (hrs > 0) {
+        "%02d:%02d:%02d".format(hrs, mins, secs)
+    } else {
+        "%02d:%02d".format(mins, secs)
+    }
+}
 
 @Composable
 fun EpisodeItem(
@@ -74,14 +87,39 @@ fun EpisodeItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            AsyncImage(
-                model = episode.thumbnail,
-                contentDescription = episode.title,
-                modifier = Modifier
-                    .width(112.dp)
-                    .aspectRatio(16f / 9)
-                    .background(MaterialTheme.colorScheme.surface)
-            )
+            Box {
+                AsyncImage(
+                    model = episode.thumbnail,
+                    contentDescription = episode.title,
+                    modifier = Modifier
+                        .width(112.dp)
+                        .aspectRatio(16f / 9)
+                        .background(MaterialTheme.colorScheme.surface)
+                )
+                Box(
+                    Modifier
+                        .matchParentSize()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Color.Transparent, Color.Black.copy(0.25f)),
+                                startY = 0.9f
+                            )
+                        )
+                )
+                if (episode.duration != null) {
+                    Text(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .offset(6.dp, (-4).dp),
+                        text = episode.duration!!.secondsToReadable(),
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontFeatureSettings = "tnum"
+                        ),
+                        lineHeight = MaterialTheme.typography.labelSmall.fontSize
+                    )
+                }
+            }
             Column(
                 modifier = Modifier.padding(vertical = 4.dp)
             ) {
