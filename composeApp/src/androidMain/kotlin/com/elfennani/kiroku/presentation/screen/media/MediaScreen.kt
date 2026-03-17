@@ -85,6 +85,7 @@ import com.elfennani.kiroku.domain.model.MediaStatus
 import com.elfennani.kiroku.domain.model.MediaType
 import com.elfennani.kiroku.domain.model.label
 import com.elfennani.kiroku.presentation.component.MediaProgressBar
+import com.elfennani.kiroku.presentation.screen.episode.EpisodeRoute
 import com.elfennani.kiroku.presentation.screen.match.MatchRoute
 import com.elfennani.kiroku.presentation.screen.media.components.ChapterItem
 import com.elfennani.kiroku.presentation.screen.media.components.EpisodeItem
@@ -109,6 +110,15 @@ fun MediaScreen(
         onNavigateBack = onNavigateBack,
         onNavigateToMatch = {
             onNavigate(MatchRoute(route.mediaId, state.media!!.title, state.sourceName!!))
+        },
+        onNavigateToEpisode = {
+            onNavigate(
+                EpisodeRoute(
+                    mediaId = route.mediaId,
+                    sourceName = it.source,
+                    episodeNumber = it.number
+                )
+            )
         }
     )
 }
@@ -122,7 +132,8 @@ private fun MediaScreen(
     state: MediaUiState = MediaUiState(),
     onUnmatch: () -> Unit = {},
     onNavigateBack: () -> Unit = {},
-    onNavigateToMatch: () -> Unit = {}
+    onNavigateToMatch: () -> Unit = {},
+    onNavigateToEpisode: (episode: Episode) -> Unit = {}
 ) {
     Scaffold() {
         if (state.isLoading && state.media == null && state.error == null) {
@@ -451,7 +462,8 @@ private fun MediaScreen(
 
                                     is MediaItemList.EpisodeList -> items((state.items.items as MediaItemList.EpisodeList).episodes) { episode ->
                                         EpisodeItem(
-                                            episode = episode
+                                            episode = episode,
+                                            onClick = { onNavigateToEpisode(episode) }
                                         )
                                     }
                                 }

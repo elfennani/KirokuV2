@@ -72,7 +72,8 @@ private fun Long.secondsToReadable(): String {
 @Composable
 fun EpisodeItem(
     modifier: Modifier = Modifier,
-    episode: Episode
+    onClick: () -> Unit = {},
+    episode: Episode,
 ) {
     DraggableItem() {
         Row(
@@ -80,7 +81,7 @@ fun EpisodeItem(
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min)
                 .combinedClickable(
-                    onClick = {},
+                    onClick = onClick,
                     onLongClick = {}
                 )
                 .padding(horizontal = 24.dp, vertical = 6.dp),

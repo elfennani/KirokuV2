@@ -32,8 +32,16 @@ kotlin {
             implementation(libs.androidx.material3.adaptive.navigation3)
             implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
+            // Coil 3
             implementation("io.coil-kt.coil3:coil-compose:3.4.0")
             implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")
+
+            // ExoPlayer
+            implementation("androidx.media3:media3-exoplayer:1.9.2")
+            implementation("androidx.media3:media3-exoplayer-dash:1.9.2")
+            implementation("androidx.media3:media3-ui:1.9.2")
+            implementation("androidx.media3:media3-ui-compose:1.9.2")
+            implementation("androidx.media3:media3-exoplayer-hls:1.9.2")
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

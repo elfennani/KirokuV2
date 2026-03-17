@@ -2,6 +2,7 @@ package com.elfennani.kiroku.di
 
 import com.elfennani.kiroku.presentation.screen.NavigationViewModel
 import com.elfennani.kiroku.presentation.screen.auth.AuthViewModel
+import com.elfennani.kiroku.presentation.screen.episode.EpisodeViewModel
 import com.elfennani.kiroku.presentation.screen.home.HomeViewModel
 import com.elfennani.kiroku.presentation.screen.login.LoginViewModel
 import com.elfennani.kiroku.presentation.screen.match.MatchViewModel
@@ -24,4 +25,5 @@ val composeModule = module {
         )
     }
     viewModel { params -> MatchViewModel(route = params.get(), mediaRepository = get()) }
+    viewModel { params -> EpisodeViewModel(route = params.get(), mediaRepository = get(), context = get()) }
 }
