@@ -25,5 +25,5 @@ val composeModule = module {
         )
     }
     viewModel { params -> MatchViewModel(route = params.get(), mediaRepository = get()) }
-    viewModel { params -> EpisodeViewModel(route = params.get(), mediaRepository = get(), context = get()) }
+    viewModel { params -> EpisodeViewModel(initialRoute = params.get(), mediaRepository = get(), context = get()) }
 }

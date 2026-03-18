@@ -49,6 +49,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -171,7 +172,7 @@ private fun MediaScreen(
             }
         } else if (state.media != null) {
             var bannerHeight by remember { mutableFloatStateOf(0f) }
-            var offsetY by remember { mutableFloatStateOf(0f) }
+            var offsetY by rememberSaveable { mutableFloatStateOf(0f) }
             val normalizedOffset by remember {
                 derivedStateOf {
                     offsetY.normalize(0f, bannerHeight * 0.75f)
@@ -190,7 +191,6 @@ private fun MediaScreen(
                     source: NestedScrollSource
                 ): Offset {
                     offsetY -= consumed.y
-
                     return super.onPostScroll(consumed, available, source)
                 }
             }
