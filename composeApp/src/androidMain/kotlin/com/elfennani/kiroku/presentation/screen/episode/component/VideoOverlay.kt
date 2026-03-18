@@ -1,3 +1,5 @@
+@file:kotlin.OptIn(ExperimentalMaterial3Api::class)
+
 package com.elfennani.kiroku.presentation.screen.episode.component
 
 import android.annotation.SuppressLint
@@ -11,38 +13,43 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -50,7 +57,9 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.times
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
@@ -59,9 +68,10 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.elfennani.kiroku.R
 import com.elfennani.kiroku.presentation.theme.AppTheme
+import com.elfennani.kiroku.presentation.theme.primary
 import com.elfennani.kiroku.presentation.theme.shade4
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlin.math.roundToLong
 
 
 @SuppressLint("DefaultLocale")
@@ -100,7 +110,7 @@ fun VideoOverlay(
     var visible by remember { mutableStateOf(true) }
     var lastInteractionTime by remember { mutableStateOf(System.currentTimeMillis()) }
 
-    LaunchedEffect(lastInteractionTime) {
+    LaunchedEffect(lastInteractionTime, videoState.isPlaying) {
         delay(3000)
         if (System.currentTimeMillis() - lastInteractionTime >= 3000 && visible && videoState.isPlaying) {
             visible = false
@@ -235,19 +245,44 @@ fun VideoOverlay(
                     Column(
                         modifier = Modifier.fillMaxWidth()
                     ) {
+                        var slidingValue by remember { mutableStateOf<Float?>(null) }
+
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             CompositionLocalProvider(
                                 LocalTextStyle provides MaterialTheme.typography.bodySmall,
                                 LocalContentColor provides shade4.copy(alpha = 0.85f)
                             ) {
-                                Text(videoState.currentPosition.toReadable())
+                                Text(
+                                    videoState.duration?.let {
+                                        if (slidingValue != null) (slidingValue!! * it).roundToLong()
+                                        else videoState.currentPosition
+                                    }.toReadable()
+                                )
                                 Text(videoState.duration.toReadable())
                             }
                         }
+
+
+                        AppSlider(
+                            modifier = Modifier.fillMaxWidth(),
+                            heightDp = 2.dp,
+                            value = slidingValue ?: ((videoState.currentPosition?.toFloat()
+                                ?: 0f) / (videoState.duration ?: 1)),
+                            onValueChange = {
+                                slidingValue = it
+                                lastInteractionTime = System.currentTimeMillis()
+                            },
+                            onValueChangeFinished = {
+                                slidingValue = null
+                                if (videoState.duration != null)
+                                    videoState.seekTo((it * videoState.duration!!).roundToLong())
+                            }
+                        )
                     }
                 }
             }

@@ -76,103 +76,111 @@ fun Sidebar(
             shrinkTowards = Alignment.Start
         )
     ) {
-        NavDisplay(
-            modifier = modifier
-                .width(384.dp)
-                .fillMaxHeight()
-                .background(MaterialTheme.colorScheme.background),
-            backStack = listOf(SidebarRoute.None) + backstack,
-            onBack = { backstack.removeLastOrNull() },
-            predictivePopTransitionSpec = {
-                ContentTransform(
-                    targetContentEnter = fadeIn() + scaleIn(initialScale = 0.9f),
-                    initialContentExit = fadeOut() + slideOutHorizontally(
-                        targetOffsetX = { it / 2 },
-                    ) + scaleOut(targetScale = 0.9f)
+        Row(
+            modifier = Modifier.fillMaxHeight()
+        ) {
+            if (isSystemInDarkTheme())
+                VerticalDivider(
+                    color = MaterialTheme.colorScheme.outline.copy(0.5f)
                 )
-            },
-            transitionSpec = {
-                ContentTransform(
-                    targetContentEnter = fadeIn() + slideIntoContainer(
-                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                    ) + scaleIn(initialScale = 0.9f),
-                    initialContentExit = fadeOut() + scaleOut(targetScale = 0.9f)
-                )
-            },
-            popTransitionSpec = {
-                ContentTransform(
-                    targetContentEnter = fadeIn() + scaleIn(initialScale = 0.9f),
-                    initialContentExit = fadeOut() + slideOutHorizontally(
-                        targetOffsetX = { it / 2 },
-                    ) + scaleOut(targetScale = 0.9f)
-                )
-            },
-            entryProvider = entryProvider {
-                entry<SidebarRoute.None> {}
-                entry<SidebarRoute.Preferences> {
-                    SidebarLayout(
-                        title = { Text("Preferences") },
-                        action = {
-                            IconButton(onClick = { backstack.clear() }) {
-                                Icon(
-                                    painterResource(R.drawable.outline_close_24),
-                                    "close"
-                                )
+            NavDisplay(
+                modifier = modifier
+                    .width(384.dp)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.background),
+                backStack = listOf(SidebarRoute.None) + backstack,
+                onBack = { backstack.removeLastOrNull() },
+                predictivePopTransitionSpec = {
+                    ContentTransform(
+                        targetContentEnter = fadeIn() + scaleIn(initialScale = 0.9f),
+                        initialContentExit = fadeOut() + slideOutHorizontally(
+                            targetOffsetX = { it / 2 },
+                        ) + scaleOut(targetScale = 0.9f)
+                    )
+                },
+                transitionSpec = {
+                    ContentTransform(
+                        targetContentEnter = fadeIn() + slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                        ) + scaleIn(initialScale = 0.9f),
+                        initialContentExit = fadeOut() + scaleOut(targetScale = 0.9f)
+                    )
+                },
+                popTransitionSpec = {
+                    ContentTransform(
+                        targetContentEnter = fadeIn() + scaleIn(initialScale = 0.9f),
+                        initialContentExit = fadeOut() + slideOutHorizontally(
+                            targetOffsetX = { it / 2 },
+                        ) + scaleOut(targetScale = 0.9f)
+                    )
+                },
+                entryProvider = entryProvider {
+                    entry<SidebarRoute.None> {}
+                    entry<SidebarRoute.Preferences> {
+                        SidebarLayout(
+                            title = { Text("Preferences") },
+                            action = {
+                                IconButton(onClick = { backstack.clear() }) {
+                                    Icon(
+                                        painterResource(R.drawable.outline_close_24),
+                                        "close"
+                                    )
+                                }
                             }
-                        }
-                    ) {
-                        Setting(
-                            leadingIcon = {
-                                Icon(
-                                    painterResource(R.drawable.sharp_hangout_video_24),
-                                    "Video Source"
-                                )
-                            },
-                            title = { Text("Video Source") },
-                            subtitle = {
-                                Text(
-                                    state.selectedSource?.let { "${it.name} • ${it.type.name} • ${it.audio.name}" }
-                                        ?: state.sourceName
-                                        ?: "Loading..."
-                                )
-                            },
-                            onClick = {
-                                backstack.add(SidebarRoute.Sources)
-                            }
-                        )
-                    }
-                }
-                entry<SidebarRoute.Sources> {
-                    SidebarLayout(
-                        navigationIcon = {
-                            IconButton(onClick = { backstack.removeLastOrNull() }) {
-                                Icon(
-                                    painterResource(R.drawable.baseline_arrow_back_24),
-                                    "Back"
-                                )
-                            }
-                        },
-                        title = { Text("Sources") },
-                    ) {
-                        state.sources.forEach {
+                        ) {
                             Setting(
-                                title = { Text(it.name) },
-                                subtitle = { Text("${it.type.name} • ${it.audio.name}") },
-                                trailingIcon = {
-                                    if (it == state.selectedSource)
-                                        Icon(
-                                            painterResource(R.drawable.sharp_check_24),
-                                            null,
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
+                                leadingIcon = {
+                                    Icon(
+                                        painterResource(R.drawable.sharp_hangout_video_24),
+                                        "Video Source"
+                                    )
                                 },
-                                onClick = { backstack.removeLastOrNull() }
+                                title = { Text("Video Source") },
+                                subtitle = {
+                                    Text(
+                                        state.selectedSource?.let { "${it.name} • ${it.type.name} • ${it.audio.name}" }
+                                            ?: state.sourceName
+                                            ?: "Loading..."
+                                    )
+                                },
+                                onClick = {
+                                    backstack.add(SidebarRoute.Sources)
+                                }
                             )
                         }
                     }
+                    entry<SidebarRoute.Sources> {
+                        SidebarLayout(
+                            navigationIcon = {
+                                IconButton(onClick = { backstack.removeLastOrNull() }) {
+                                    Icon(
+                                        painterResource(R.drawable.baseline_arrow_back_24),
+                                        "Back"
+                                    )
+                                }
+                            },
+                            title = { Text("Sources") },
+                        ) {
+                            state.sources.forEach {
+                                Setting(
+                                    title = { Text(it.name) },
+                                    subtitle = { Text("${it.type.name} • ${it.audio.name}") },
+                                    trailingIcon = {
+                                        if (it == state.selectedSource)
+                                            Icon(
+                                                painterResource(R.drawable.sharp_check_24),
+                                                null,
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
+                                    },
+                                    onClick = { backstack.removeLastOrNull() }
+                                )
+                            }
+                        }
+                    }
                 }
-            }
-        )
+            )
+        }
     }
 }
 
@@ -184,49 +192,40 @@ fun SidebarLayout(
     action: @Composable () -> Unit = {},
     content: @Composable () -> Unit = {},
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxSize(),
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(vertical = 16.dp),
     ) {
-        if (isSystemInDarkTheme())
-            VerticalDivider(
-                color = MaterialTheme.colorScheme.outline.copy(0.5f)
-            )
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 16.dp),
-        ) {
-            CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Box(Modifier.offset(x = (-12).dp)) {
-                        navigationIcon()
-                    }
-                    CompositionLocalProvider(
-                        LocalTextStyle provides MaterialTheme.typography.titleMedium
-                    ) {
-                        title()
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    Box(Modifier.offset(x = 12.dp)) {
-                        action()
-                    }
+        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(Modifier.offset(x = (-12).dp)) {
+                    navigationIcon()
                 }
-
-
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
-                    color = MaterialTheme.colorScheme.outline
-                )
-
-                content()
+                CompositionLocalProvider(
+                    LocalTextStyle provides MaterialTheme.typography.titleMedium
+                ) {
+                    title()
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Box(Modifier.offset(x = 12.dp)) {
+                    action()
+                }
             }
+
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
+                color = MaterialTheme.colorScheme.outline
+            )
+
+            content()
         }
     }
 }

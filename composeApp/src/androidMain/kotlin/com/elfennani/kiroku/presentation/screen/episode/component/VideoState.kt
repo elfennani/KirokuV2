@@ -59,31 +59,32 @@ class VideoState(
     }
 
     private fun startLooper() {
-        duration = player.duration
-        currentPosition = player.currentPosition
-        isPlaying = player.isPlaying
-        isBuffering = player.isLoading
-        hasEnded = player.playbackState == Player.STATE_ENDED
-
+        updateState()
 
         job = scope.launch {
             while (isActive) {
-                currentPosition = player.currentPosition
-                duration = player.duration
-                isPlaying = player.isPlaying
-                isBuffering = player.isLoading
-                hasEnded = player.playbackState == Player.STATE_ENDED
+                updateState()
                 delay(1000L)
             }
         }
     }
 
+    private fun updateState(){
+        currentPosition = player.currentPosition
+        duration = player.duration
+        isPlaying = player.isPlaying
+        isBuffering = player.isLoading
+        hasEnded = player.playbackState == Player.STATE_ENDED
+    }
+
     fun seekForward() {
         player.seekTo(player.currentPosition + 10000)
+        updateState()
     }
 
     fun seekBackwards() {
         player.seekTo(player.currentPosition - 10000)
+        updateState()
     }
 
     fun togglePlayback() {
@@ -96,6 +97,7 @@ class VideoState(
 
     fun seekTo(positionMs: Long) {
         player.seekTo(positionMs)
+        updateState()
     }
 
     fun onDispose() {
