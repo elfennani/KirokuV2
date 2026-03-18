@@ -68,6 +68,7 @@ fun AppSlider(
 
     Box(
         modifier = modifier
+            .height(heightDp+8.dp)
             .graphicsLayer {
                 sliderWidth = size.width
             }

@@ -254,8 +254,7 @@ fun VideoOverlay(
 
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp),
+                                .fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             CompositionLocalProvider(
@@ -288,6 +287,8 @@ fun VideoOverlay(
                                     videoState.seekTo((it * videoState.duration!!).roundToLong())
                             }
                         )
+
+                        Spacer(Modifier.height(8.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),

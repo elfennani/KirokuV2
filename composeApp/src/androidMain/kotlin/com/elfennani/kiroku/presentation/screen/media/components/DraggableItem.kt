@@ -39,6 +39,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -180,7 +181,7 @@ class DraggableState(
 
 @Composable
 fun rememberDraggableState(onSuccess: () -> Unit): DraggableState {
-    val width = LocalView.current.width
+    val width = LocalWindowInfo.current.containerSize.width
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val draggableState = remember {
