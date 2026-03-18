@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,6 +31,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +41,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -101,6 +104,8 @@ fun VideoOverlay(
     title: @Composable () -> Unit = {},
     subtitle: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
+    hasNextEpisode: Boolean = false,
+    onNextEpisode: () -> Unit = {},
     content: @Composable BoxScope.() -> Unit,
 ) {
     val container = LocalWindowInfo.current.containerSize
@@ -283,6 +288,37 @@ fun VideoOverlay(
                                     videoState.seekTo((it * videoState.duration!!).roundToLong())
                             }
                         )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(
+                                modifier = Modifier.offset(x = (-18).dp),
+                                colors = ButtonDefaults.textButtonColors(contentColor = shade4),
+                                onClick = {
+                                    videoState.seekTo(
+                                        (videoState.currentPosition ?: 0) + 85_000
+                                    )
+                                }
+                            ) {
+                                Icon(painterResource(R.drawable.sharp_next_plan_24), null)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Skip Intro")
+                            }
+
+                            if (hasNextEpisode)
+                                TextButton(
+                                    modifier = Modifier.offset(x = 18.dp),
+                                    colors = ButtonDefaults.textButtonColors(contentColor = shade4),
+                                    onClick = onNextEpisode
+                                ) {
+                                    Text("Next Episode")
+                                    Spacer(Modifier.width(8.dp))
+                                    Icon(painterResource(R.drawable.baseline_skip_next_24), null)
+                                }
+                        }
                     }
                 }
             }

@@ -89,6 +89,7 @@ fun EpisodeScreen(route: EpisodeRoute, onNavigateBack: () -> Unit) {
         state = state,
         onBack = onNavigateBack,
         videoState = videoState,
+        onNextEpisode = viewModel::nextEpisode,
         player = {
             AndroidView(
                 modifier = Modifier
@@ -118,6 +119,7 @@ private fun EpisodeScreen(
         episodeNumber = -1.0
     ),
     videoState: VideoState,
+    onNextEpisode: () -> Unit = {},
     onBack: () -> Unit = {},
     player: @Composable BoxScope.() -> Unit = {}
 ) {
@@ -156,10 +158,13 @@ private fun EpisodeScreen(
                     .fillMaxHeight(),
                 videoState = videoState,
                 onBack = onBack,
+                hasNextEpisode = state.availableEpisodes.sorted()
+                    .firstOrNull { it > state.episodeNumber } != null,
+                onNextEpisode = onNextEpisode,
                 title = {
                     Text(
                         state.episode?.title?.let {
-                            "${state.episodeNumber.clean()} - $it"
+                            "${state.episodeNumber.clean().padStart(2, '0')} - $it"
                         }
                             ?: "Episode ${state.episodeNumber.clean()}"
                     )

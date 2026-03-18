@@ -17,12 +17,15 @@ import com.elfennani.kiroku.domain.model.toResult
 import com.elfennani.kiroku.domain.repository.MediaRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -36,13 +39,23 @@ class EpisodeViewModel(
     private val context: Application
 ) : ViewModel() {
     private val route = MutableStateFlow(initialRoute)
-    private val _state = MutableStateFlow(
+    private val _uiState = MutableStateFlow(
         EpisodeUiState(
             sourceName = initialRoute.sourceName,
             episodeNumber = initialRoute.episodeNumber
         )
     )
-    val state = _state.asStateFlow()
+    val state = combine(route, _uiState) { route, state ->
+        state.copy(
+            sourceName = route.sourceName,
+            episodeNumber = route.episodeNumber
+        )
+    }.stateIn(
+        viewModelScope, SharingStarted.Eagerly, EpisodeUiState(
+            sourceName = initialRoute.sourceName,
+            episodeNumber = initialRoute.episodeNumber
+        )
+    )
     private val listener = object : Player.Listener {
 
     }
@@ -57,7 +70,7 @@ class EpisodeViewModel(
         // Load media
         viewModelScope.launch {
             mediaRepository.getMediaFlow(initialRoute.mediaId).collect { media ->
-                _state.update { it.copy(media = media) }
+                _uiState.update { it.copy(media = media) }
             }
         }
 
@@ -72,11 +85,14 @@ class EpisodeViewModel(
                     ).map { route to it }
                 } else flowOf(route to null)
             }.collect { (route, items) ->
-                _state.update { state ->
+                _uiState.update { state ->
                     state.copy(
                         episode = (items as? MediaItemList.EpisodeList)
                             ?.episodes
-                            ?.find { ep -> ep.number == route.episodeNumber }
+                            ?.find { ep -> ep.number == route.episodeNumber },
+                        availableEpisodes = (items as? MediaItemList.EpisodeList)
+                            ?.episodes
+                            ?.map { it.number } ?: emptyList()
                     )
                 }
             }
@@ -104,7 +120,7 @@ class EpisodeViewModel(
             }.collect { sources ->
                 when (sources) {
                     Result.Loading -> {
-                        _state.update {
+                        _uiState.update {
                             it.copy(
                                 isLoading = true,
                                 sources = emptyList(),
@@ -128,7 +144,7 @@ class EpisodeViewModel(
                             num
                         }
 
-                        _state.update { state ->
+                        _uiState.update { state ->
                             state.copy(
                                 sources = sources.data,
                                 selectedSource = source,
@@ -142,7 +158,7 @@ class EpisodeViewModel(
 
         // Setting source to exoPlayer
         viewModelScope.launch {
-            _state.map { it.selectedSource }.distinctUntilChanged().collect { source ->
+            _uiState.map { it.selectedSource }.distinctUntilChanged().collect { source ->
                 if (source != null) {
                     Log.d(TAG, "SOURCE_SETTING: $source")
                     exoPlayer.setMediaItem(MediaItem.fromUri(source.url))
@@ -150,6 +166,16 @@ class EpisodeViewModel(
                     exoPlayer.prepare()
                 }
             }
+        }
+    }
+
+    fun nextEpisode(){
+        val episodeNumber = state.value.availableEpisodes.sorted()
+            .firstOrNull { it > state.value.episodeNumber }
+
+        if (episodeNumber != null) {
+            exoPlayer.removeMediaItem(0)
+            route.update { it.copy(episodeNumber = episodeNumber) }
         }
     }
 

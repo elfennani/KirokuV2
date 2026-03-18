@@ -16,5 +16,6 @@ data class EpisodeUiState(
     val error: String? = null,
     val selectedSource: VideoSource? = null,
     val episode: Episode? = null,
+    val availableEpisodes: List<Double> = emptyList(),
     val media: Media? = null
 )
