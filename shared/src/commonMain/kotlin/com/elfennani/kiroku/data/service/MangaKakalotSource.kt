@@ -1,8 +1,8 @@
-package com.elfennani.kiroku.data.datasource
+package com.elfennani.kiroku.data.service
 
 import com.elfennani.kiroku.data.local.dao.MediaDao
 import com.elfennani.kiroku.data.local.entity.MatchEntity
-import com.elfennani.kiroku.domain.datasource.MangaSource
+import com.elfennani.kiroku.domain.service.MangaSource
 import com.elfennani.kiroku.domain.model.BasicMedia
 import com.elfennani.kiroku.domain.model.Chapter
 import com.fleeksoft.ksoup.Ksoup

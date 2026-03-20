@@ -26,6 +26,8 @@ import com.elfennani.kiroku.domain.util.ExternalUriHandler
 import com.elfennani.kiroku.domain.util.GlobalErrorHandler
 import com.elfennani.kiroku.presentation.screen.auth.AuthRoute
 import com.elfennani.kiroku.presentation.screen.auth.AuthScreen
+import com.elfennani.kiroku.presentation.screen.debug.DebugRoute
+import com.elfennani.kiroku.presentation.screen.debug.DebugScreen
 import com.elfennani.kiroku.presentation.screen.episode.EpisodeRoute
 import com.elfennani.kiroku.presentation.screen.episode.EpisodeScreen
 import com.elfennani.kiroku.presentation.screen.home.HomeRoute
@@ -137,6 +139,12 @@ fun Navigation(isAuthed: Boolean) {
                     EpisodeScreen(
                         route = it,
                         onNavigateBack = viewModel::back
+                    )
+                }
+
+                entry<DebugRoute>{
+                    DebugScreen(
+                        onBack = viewModel::back
                     )
                 }
             }

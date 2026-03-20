@@ -62,7 +62,7 @@ fun ChapterItem(
     }
 
 
-    DraggableItem() {
+    DraggableItem(key = chapter.id) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

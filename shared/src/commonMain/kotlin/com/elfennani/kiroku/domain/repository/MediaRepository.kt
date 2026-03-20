@@ -1,7 +1,7 @@
 package com.elfennani.kiroku.domain.repository
 
-import com.elfennani.kiroku.domain.datasource.AnimeSource
-import com.elfennani.kiroku.domain.datasource.MangaSource
+import com.elfennani.kiroku.domain.service.AnimeSource
+import com.elfennani.kiroku.domain.service.MangaSource
 import com.elfennani.kiroku.domain.model.Media
 import com.elfennani.kiroku.domain.model.MediaItemList
 import com.elfennani.kiroku.domain.model.MediaType

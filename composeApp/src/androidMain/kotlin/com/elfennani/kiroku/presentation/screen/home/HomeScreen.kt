@@ -1,6 +1,10 @@
 package com.elfennani.kiroku.presentation.screen.home
 
+import android.os.Build
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,8 +38,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.BlurredEdgeTreatment
@@ -45,6 +52,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -53,15 +61,22 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.dataStore
+import androidx.datastore.preferences.core.edit
 import androidx.navigation3.runtime.NavKey
 import coil3.compose.AsyncImage
 import com.elfennani.kiroku.R
+import com.elfennani.kiroku.data.NOTIFICATION_PERMISSION_GRANTED_KEY
+import com.elfennani.kiroku.data.dataStore
 import com.elfennani.kiroku.domain.model.Media
 import com.elfennani.kiroku.domain.model.MediaType
 import com.elfennani.kiroku.domain.model.Result
 import com.elfennani.kiroku.domain.model.label
 import com.elfennani.kiroku.presentation.component.MediaProgressBar
+import com.elfennani.kiroku.presentation.screen.debug.DebugRoute
 import com.elfennani.kiroku.presentation.screen.media.MediaRoute
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -75,15 +90,42 @@ fun HomeScreen(
         state = state,
         onNavigateToMedia = {
             onNavigate(MediaRoute(it))
+        },
+        onNavigateToDebug = {
+            onNavigate(DebugRoute)
         }
     )
 }
 
+
 @Composable
 private fun HomeScreen(
     state: HomeUiState = HomeUiState(),
-    onNavigateToMedia: (id: Int) -> Unit = {}
+    onNavigateToMedia: (id: Int) -> Unit = {},
+    onNavigateToDebug: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val notificationPermissionGranted by remember {
+        context.dataStore.data
+            .map { it[NOTIFICATION_PERMISSION_GRANTED_KEY] }
+    }
+        .collectAsState(null)
+
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            scope.launch {
+                context.dataStore.edit {
+                    it[NOTIFICATION_PERMISSION_GRANTED_KEY] = granted
+                }
+            }
+        }
+
+    LaunchedEffect(Unit) {
+        if (notificationPermissionGranted == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            launcher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+    }
+
     Scaffold(
         topBar = {
             Row(
@@ -92,10 +134,18 @@ private fun HomeScreen(
                     .padding(WindowInsets.statusBars.asPaddingValues())
                     .padding(top = 64.dp, bottom = 16.dp)
                     .padding(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Kiroku", style = MaterialTheme.typography.headlineMedium)
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(onClick = onNavigateToDebug) {
+                    Icon(
+                        modifier = Modifier.size(32.dp),
+                        painter = painterResource(R.drawable.sharp_bug_report_24),
+                        contentDescription = null
+                    )
+                }
                 IconButton(onClick = {}) {
                     Icon(
                         modifier = Modifier.size(32.dp),

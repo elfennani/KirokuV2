@@ -1,4 +1,4 @@
-package com.elfennani.kiroku.domain.datasource
+package com.elfennani.kiroku.domain.service
 
 import com.elfennani.kiroku.domain.model.BasicMedia
 import com.elfennani.kiroku.domain.model.Chapter

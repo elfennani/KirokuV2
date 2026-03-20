@@ -12,5 +12,7 @@ data class Episode(
     val duration: Long?,
 
     /** Size in bytes */
-    val size: Long?
+    val size: Long?,
+
+    val downloadStatus: DownloadStatus? = null
 )

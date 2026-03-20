@@ -1,10 +1,10 @@
-package com.elfennani.kiroku.domain.datasource
+package com.elfennani.kiroku.domain.service
 
 import com.elfennani.kiroku.domain.model.BasicEpisode
 import com.elfennani.kiroku.domain.model.BasicMedia
-import com.elfennani.kiroku.domain.model.Resource
-import com.elfennani.kiroku.domain.model.Result
+import com.elfennani.kiroku.domain.model.VideoAudio
 import com.elfennani.kiroku.domain.model.VideoSource
+import com.elfennani.kiroku.domain.model.VideoType
 
 interface AnimeSource {
     /**
@@ -43,5 +43,10 @@ interface AnimeSource {
      * @param mediaId The AniList id of the show.
      * @param episodeNumber The number of the episode.
      */
-    suspend fun getSources(mediaId: Int, episodeNumber: Double): List<VideoSource>
+    suspend fun getSources(
+        mediaId: Int,
+        episodeNumber: Double,
+        audio: VideoAudio? = null,
+        type: VideoType? = null
+    ): List<VideoSource>
 }

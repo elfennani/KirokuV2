@@ -50,7 +50,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun DraggableItem(
     modifier: Modifier = Modifier,
-    state: DraggableState = rememberDraggableState { },
+    key: Any,
+    state: DraggableState = rememberDraggableState(key) { },
     backdrop: @Composable BoxScope.() -> Unit = { DraggableBackdrop(state = state) },
     content: @Composable BoxScope.() -> Unit
 ) {
@@ -61,7 +62,7 @@ fun DraggableItem(
         backdrop()
         Box(
             Modifier
-                .pointerInput(Unit) {
+                .pointerInput(key) {
                     state.run { gestureHandler() }
                 }
                 .offset(x = state.offsetDp)
@@ -161,7 +162,8 @@ class DraggableState(
             onDragStart = {},
             onDragEnd = {
                 animateBack(true)
-                onSuccess()
+                if (isOverThreshold)
+                    onSuccess()
             },
             onDragCancel = {
                 animateBack()
@@ -180,11 +182,11 @@ class DraggableState(
 }
 
 @Composable
-fun rememberDraggableState(onSuccess: () -> Unit): DraggableState {
+fun rememberDraggableState(key: Any, onSuccess: () -> Unit): DraggableState {
     val width = LocalWindowInfo.current.containerSize.width
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
-    val draggableState = remember {
+    val draggableState = remember(key) {
         DraggableState(width, density = density, scope = scope, onSuccess = onSuccess)
     }
 

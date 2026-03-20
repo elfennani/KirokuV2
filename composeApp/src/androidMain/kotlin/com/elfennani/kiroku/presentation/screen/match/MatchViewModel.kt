@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elfennani.kiroku.domain.model.Resource
 import com.elfennani.kiroku.domain.model.resourceOf
+import com.elfennani.kiroku.domain.repository.DownloadRepository
 import com.elfennani.kiroku.domain.repository.MediaRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +21,7 @@ import kotlin.time.Instant
 @OptIn(FlowPreview::class)
 class MatchViewModel(
     private val route: MatchRoute,
-    private val mediaRepository: MediaRepository
+    private val mediaRepository: MediaRepository,
 ) : ViewModel() {
     private val _state = MutableStateFlow(MatchUiState(query = route.title, mediaId = route.mediaId))
     val state = _state.asStateFlow()

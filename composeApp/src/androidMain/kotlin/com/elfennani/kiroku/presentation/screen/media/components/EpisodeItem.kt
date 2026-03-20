@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -50,7 +51,9 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.elfennani.kiroku.R
+import com.elfennani.kiroku.domain.model.DownloadStatus
 import com.elfennani.kiroku.domain.model.Episode
+import com.elfennani.kiroku.domain.model.label
 import com.elfennani.kiroku.utils.clean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -73,9 +76,11 @@ private fun Long.secondsToReadable(): String {
 fun EpisodeItem(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
+    onDownload: () -> Unit = {},
     episode: Episode,
 ) {
-    DraggableItem() {
+    val state = rememberDraggableState(key = episode.id, onDownload)
+    DraggableItem(key = episode.id, state = state) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -133,8 +138,17 @@ fun EpisodeItem(
                         episode.title!!,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.outlineVariant,
-                        maxLines = 2
+                        maxLines = if (episode.downloadStatus == null) 2 else 1
                     )
+                if (episode.downloadStatus != null) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        episode.downloadStatus!!.label(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1
+                    )
+                }
             }
         }
     }

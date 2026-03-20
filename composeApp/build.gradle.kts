@@ -21,10 +21,17 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlinx.coroutines.android)
+
+            // Ktor
+            implementation(libs.ktor.client.core)
+
+            // Koin
             implementation(project.dependencies.platform("io.insert-koin:koin-bom:4.2.0-RC1"))
             implementation("io.insert-koin:koin-core")
             implementation("io.insert-koin:koin-compose")
             implementation("io.insert-koin:koin-compose-viewmodel")
+            implementation("io.insert-koin:koin-android")
+            implementation("io.insert-koin:koin-androidx-workmanager")
 
             // Compose Navigation 3
             implementation(libs.androidx.navigation3.ui)
@@ -42,6 +49,12 @@ kotlin {
             implementation("androidx.media3:media3-ui:1.9.2")
             implementation("androidx.media3:media3-ui-compose:1.9.2")
             implementation("androidx.media3:media3-exoplayer-hls:1.9.2")
+
+            // Work Manager
+            implementation(libs.androidx.work.runtime.ktx)
+
+            // DataStore Preferences
+            implementation("androidx.datastore:datastore-preferences:1.2.1")
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

@@ -9,3 +9,4 @@ fun MediaItemList.isEmpty() = when(this){
     is MediaItemList.ChapterList -> this.chapters.isEmpty()
     is MediaItemList.EpisodeList -> this.episodes.isEmpty()
 }
+

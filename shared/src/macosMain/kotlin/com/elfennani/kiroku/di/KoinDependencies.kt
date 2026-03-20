@@ -1,6 +1,5 @@
 package com.elfennani.kiroku.di
 
-import com.elfennani.kiroku.data.datasource.AllAnimeDataSource
 import com.elfennani.kiroku.domain.usecase.FetchOnGoingMedia
 import com.elfennani.kiroku.domain.usecase.GetOnGoingMedia
 import com.elfennani.kiroku.domain.usecase.GetSession

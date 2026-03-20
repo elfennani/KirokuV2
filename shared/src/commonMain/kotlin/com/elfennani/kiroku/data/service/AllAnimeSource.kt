@@ -1,10 +1,9 @@
-package com.elfennani.kiroku.data.datasource
+package com.elfennani.kiroku.data.service
 
 import com.apollographql.apollo.ApolloClient
-import com.elfennani.kiroku.data.getKtorClient
 import com.elfennani.kiroku.data.local.dao.MediaDao
 import com.elfennani.kiroku.data.local.entity.MatchEntity
-import com.elfennani.kiroku.domain.datasource.AnimeSource
+import com.elfennani.kiroku.domain.service.AnimeSource
 import com.elfennani.kiroku.domain.model.BasicEpisode
 import com.elfennani.kiroku.domain.model.BasicMedia
 import com.elfennani.kiroku.domain.model.VideoAudio
@@ -20,12 +19,10 @@ import com.elfennani.shared.allanime.type.VaildTranslationTypeEnumType
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import kotlin.math.roundToLong
 
 class AllAnimeSource(
@@ -153,7 +150,9 @@ class AllAnimeSource(
 
     override suspend fun getSources(
         mediaId: Int,
-        episodeNumber: Double
+        episodeNumber: Double,
+        audio: VideoAudio?,
+        type: VideoType?
     ): List<VideoSource> {
         return coroutineScope {
             val showId = getSourceId(mediaId) ?: throw Exception("Show has not been matched yet")
@@ -177,13 +176,21 @@ class AllAnimeSource(
             val dub = async { fetch(VaildTranslationTypeEnumType.dub) }.await()
 
             val urls = coroutineScope {
-                val sourceUrls = convertToSourceUrls(dub.episode?.sourceUrls).map {
-                    Pair(VideoAudio.DUBBED, it)
-                } + convertToSourceUrls(
-                    sub.episode?.sourceUrls
-                ).map {
-                    Pair(VideoAudio.SUBBED, it)
-                }
+                val sourceUrls = (
+
+                        if (audio == null || audio == VideoAudio.DUBBED) convertToSourceUrls(dub.episode?.sourceUrls).map {
+                            Pair(VideoAudio.DUBBED, it)
+                        } else emptyList()
+
+                        ) + (
+
+                        if (audio == null || audio == VideoAudio.SUBBED) convertToSourceUrls(
+                            sub.episode?.sourceUrls
+                        ).map {
+                            Pair(VideoAudio.SUBBED, it)
+                        } else emptyList()
+
+                        )
 
 
                 sourceUrls
@@ -215,7 +222,14 @@ class AllAnimeSource(
                             e.printStackTrace()
                             null
                         }
-                    }.map { (audio, type, url) ->
+                    }
+                    .filter {
+                        val itemType = it.second
+
+                        if (type == null) return@filter true
+                        else itemType == type
+                    }
+                    .map { (audio, type, url) ->
                         async {
                             try {
                                 println("Fetching... $type: $url")

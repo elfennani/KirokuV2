@@ -3,13 +3,14 @@ package com.elfennani.kiroku.di
 import com.apollographql.apollo.ApolloClient
 import com.elfennani.kiroku.data.AniListInterceptor
 import com.elfennani.kiroku.data.ApolloClientSource
-import com.elfennani.kiroku.data.datasource.AllAnimeDataSource
-import com.elfennani.kiroku.data.datasource.AllAnimeSource
-import com.elfennani.kiroku.data.datasource.MangaKakalotSource
+import com.elfennani.kiroku.data.service.AllAnimeSource
+import com.elfennani.kiroku.data.service.MangaKakalotSource
 import com.elfennani.kiroku.data.local.AppDatabase
+import com.elfennani.kiroku.data.repository.DownloadRepositoryImpl
 import com.elfennani.kiroku.data.repository.MediaRepositoryImpl
 import com.elfennani.kiroku.data.repository.SessionRepositoryImpl
 import com.elfennani.kiroku.data.repository.UserRepositoryImpl
+import com.elfennani.kiroku.domain.repository.DownloadRepository
 import com.elfennani.kiroku.domain.repository.MediaRepository
 import com.elfennani.kiroku.domain.repository.SessionRepository
 import com.elfennani.kiroku.domain.repository.UserRepository
@@ -61,6 +62,7 @@ val commonModule = module {
     single { get<AppDatabase>().getMediaDao() }
     single { get<AppDatabase>().getEpisodeDao() }
     single { get<AppDatabase>().getChapterDao() }
+    single { get<AppDatabase>().getDownloadDao() }
 
     // Sources
     single {
@@ -97,12 +99,11 @@ val commonModule = module {
             chapterDao = get(),
         )
     }
-
-
-    // matched Sources
-    single {
-        AllAnimeDataSource(
-            allAnimeClient = get(named(ApolloClientSource.AllAnime))
+    single<DownloadRepository> {
+        DownloadRepositoryImpl(
+            downloadService = get(),
+            downloadDao = get(),
+            mediaRepository = get()
         )
     }
 

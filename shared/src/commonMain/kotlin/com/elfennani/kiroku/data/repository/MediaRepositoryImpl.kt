@@ -1,8 +1,8 @@
 package com.elfennani.kiroku.data.repository
 
 import com.apollographql.apollo.ApolloClient
-import com.elfennani.kiroku.data.datasource.AllAnimeSource
-import com.elfennani.kiroku.data.datasource.MangaKakalotSource
+import com.elfennani.kiroku.data.service.AllAnimeSource
+import com.elfennani.kiroku.data.service.MangaKakalotSource
 import com.elfennani.kiroku.data.local.dao.ChapterDao
 import com.elfennani.kiroku.data.local.dao.EpisodeDao
 import com.elfennani.kiroku.data.local.dao.MediaDao
@@ -11,10 +11,8 @@ import com.elfennani.kiroku.data.local.entity.LocalMediaEntity
 import com.elfennani.kiroku.data.local.entity.asDomain
 import com.elfennani.kiroku.data.local.entity.asEntity
 import com.elfennani.kiroku.data.local.relation.asDomain
-import com.elfennani.kiroku.domain.datasource.AnimeSource
-import com.elfennani.kiroku.domain.datasource.MangaSource
-import com.elfennani.kiroku.domain.model.Episode
-import com.elfennani.kiroku.domain.model.MatchStatus
+import com.elfennani.kiroku.domain.service.AnimeSource
+import com.elfennani.kiroku.domain.service.MangaSource
 import com.elfennani.kiroku.domain.model.Media
 import com.elfennani.kiroku.domain.model.MediaItemList
 import com.elfennani.kiroku.domain.model.MediaType
@@ -28,8 +26,6 @@ import com.elfennani.shared.anilist.GetAnimeEpisodesQuery
 import com.elfennani.shared.anilist.GetCollectionMediaQuery
 import com.elfennani.shared.anilist.GetMediaByIdQuery
 import com.elfennani.shared.anilist.type.MediaListStatus
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map

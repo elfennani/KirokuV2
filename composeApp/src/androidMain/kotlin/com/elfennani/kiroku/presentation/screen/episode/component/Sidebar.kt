@@ -1,6 +1,5 @@
 package com.elfennani.kiroku.presentation.screen.episode.component
 
-import android.graphics.drawable.Icon
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
@@ -136,7 +135,7 @@ fun Sidebar(
                                     )
                                 },
                                 title = { Text("Video Source") },
-                                subtitle = {
+                                description = {
                                     Text(
                                         state.selectedSource?.let { "${it.name} • ${it.type.name} • ${it.audio.name}" }
                                             ?: state.sourceName
@@ -164,7 +163,7 @@ fun Sidebar(
                             state.sources.forEach {
                                 Setting(
                                     title = { Text(it.name) },
-                                    subtitle = { Text("${it.type.name} • ${it.audio.name}") },
+                                    description = { Text("${it.type.name} • ${it.audio.name}") },
                                     trailingIcon = {
                                         if (it == state.selectedSource)
                                             Icon(
@@ -241,7 +240,7 @@ fun Setting(
         )
     },
     title: @Composable () -> Unit = {},
-    subtitle: @Composable () -> Unit = {},
+    description: @Composable () -> Unit = {},
     onClick: () -> Unit = {}
 ) {
     Row(
@@ -265,7 +264,7 @@ fun Setting(
                 LocalTextStyle provides MaterialTheme.typography.bodySmall,
                 LocalContentColor provides MaterialTheme.colorScheme.outlineVariant
             ) {
-                subtitle()
+                description()
             }
         }
         trailingIcon()

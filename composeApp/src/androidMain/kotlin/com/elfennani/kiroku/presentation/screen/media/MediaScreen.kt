@@ -1,17 +1,7 @@
 package com.elfennani.kiroku.presentation.screen.media
 
 import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,7 +38,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -58,15 +47,11 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.fromHtml
@@ -91,8 +76,6 @@ import com.elfennani.kiroku.presentation.screen.match.MatchRoute
 import com.elfennani.kiroku.presentation.screen.media.components.ChapterItem
 import com.elfennani.kiroku.presentation.screen.media.components.EpisodeItem
 import com.elfennani.kiroku.presentation.theme.AppTheme
-import com.elfennani.kiroku.utils.clean
-import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -109,6 +92,7 @@ fun MediaScreen(
         state = state,
         onUnmatch = viewModel::unmatch,
         onNavigateBack = onNavigateBack,
+        onDownloadEpisode = viewModel::download,
         onNavigateToMatch = {
             onNavigate(MatchRoute(route.mediaId, state.media!!.title, state.sourceName!!))
         },
@@ -134,7 +118,8 @@ private fun MediaScreen(
     onUnmatch: () -> Unit = {},
     onNavigateBack: () -> Unit = {},
     onNavigateToMatch: () -> Unit = {},
-    onNavigateToEpisode: (episode: Episode) -> Unit = {}
+    onNavigateToEpisode: (episode: Episode) -> Unit = {},
+    onDownloadEpisode: (episode: Episode) -> Unit = {}
 ) {
     Scaffold() {
         if (state.isLoading && state.media == null && state.error == null) {
@@ -463,7 +448,8 @@ private fun MediaScreen(
                                     is MediaItemList.EpisodeList -> items((state.items.items as MediaItemList.EpisodeList).episodes) { episode ->
                                         EpisodeItem(
                                             episode = episode,
-                                            onClick = { onNavigateToEpisode(episode) }
+                                            onClick = { onNavigateToEpisode(episode) },
+                                            onDownload = { onDownloadEpisode(episode) }
                                         )
                                     }
                                 }
